@@ -7,8 +7,11 @@ import (
 // Bitboard typing
 type Bitboard uint64
 
-// map: actual sqaures -> int for bit shift (lsb == a8, msb == h1)
-var squareToBit = map[string]uint64 {
+/*
+
+	HELPFUL... MAY BE NEEDED
+
+	var squareToBit = map[string]uint64 {
 	"a8": 0, "b8": 1, "c8": 2, "d8": 3, "e8": 4, "f8": 5, "g8": 6, "h8": 7, 
 	"a7": 8, "b7": 9, "c7": 10, "d7": 11, "e7": 12, "f7": 13, "g7": 14, "h7": 15, 
 	"a6": 16, "b6": 17, "c6": 18, "d6": 19, "e6": 20, "f6": 21, "g6": 22, "h6": 23, 
@@ -19,21 +22,32 @@ var squareToBit = map[string]uint64 {
 	"a1": 56, "b1": 57, "c1": 58, "d1": 59, "e1": 60, "f1": 61, "g1": 62, "h1": 63,
 }
 
-/*
-"a8" "b8" "c8" "d8" "e8" "f8" "g8" "h8"
-"a7" "b7" "c7" "d7' "e7" "f7" "g7" "h7"
-"a6" "b6" "c6" "d6" "e6" "f6" "g6" "h6"
-"a5" "b5" "c5" "d5" "e5" "f5" "g5" "h5"
-"a4" "b4" "c4" "d4" "e4" "f4" "g4" "h4"
-"a3" "b3" "c3" "d3" "e3" "f3" "g3" "h3"
-"a2" "b2" "c2" "d2" "e2" "f2" "g2" "h2"
-"a1" "b1" "c1" "d1" "e1" "f1" "g1" "h1"
+	const (
+		A1, B1, C1, D1, E1, F1, G1, H1 = 0, 1, 2, 3, 4, 5, 6, 7
+		A2, B2, C2, D2, E2, F2, G2, H2 = 8, 9, 10, 11, 12, 13, 14, 15
+		A3, B3, C3, D3, E3, F3, G3, H3 = 16, 17, 18, 19, 20, 21, 22, 23
+		A4, B4, C4, D4, E4, F4, G4, H4 = 24, 25, 26, 27, 28, 29, 30, 31
+		A5, B5, C5, D5, E5, F5, G5, H5 = 32, 33, 34, 35, 36, 37, 38, 39
+		A6, B6, C6, D6, E6, F6, G6, H6 = 40, 41, 42, 43, 44, 45, 46, 47
+		A7, B7, C7, D7, E7, F7, G7, H7 = 48, 49, 50, 51, 52, 53, 54, 55
+		A8, B8, C8, D8, E8, F8, G8, H8 = 56, 57, 58, 59, 60, 61, 62, 63
+	)
+
+	"a8" "b8" "c8" "d8" "e8" "f8" "g8" "h8"
+	"a7" "b7" "c7" "d7' "e7" "f7" "g7" "h7"
+	"a6" "b6" "c6" "d6" "e6" "f6" "g6" "h6"
+	"a5" "b5" "c5" "d5" "e5" "f5" "g5" "h5"
+	"a4" "b4" "c4" "d4" "e4" "f4" "g4" "h4"
+	"a3" "b3" "c3" "d3" "e3" "f3" "g3" "h3"
+	"a2" "b2" "c2" "d2" "e2" "f2" "g2" "h2"
+	"a1" "b1" "c1" "d1" "e1" "f1" "g1" "h1"
+
 */
 
-/*
-		- BIT OPERATIONS (LSB == a8, MSB == h1)
+/**********************************************************************
+		- BIT OPERATIONS FOR BITBOARD (LSB == a8, MSB == h1)
 		- Board is printed from top to bottom from whites perspective 
-*/
+**********************************************************************/
 
 func (bitboard Bitboard) GetBit(sq int) int {
 	isSet := bitboard & (1 << sq)
@@ -44,15 +58,17 @@ func (bitboard Bitboard) GetBit(sq int) int {
 	}
 }
 
-func (bitboard *Bitboard) SetBit(sq string) {
-	*bitboard |= (1 << squareToBit[sq])
+func (bitboard *Bitboard) SetBit(sq int) {
+	// *bitboard |= (1 << squareToBit[sq])
+	*bitboard |= (1 << sq)
 }
 
-func (bitboard *Bitboard) PopBit(sq string) {
-	if *bitboard & (1 << squareToBit[sq]) == 0 {
+func (bitboard *Bitboard) PopBit(sq int) {
+	if *bitboard & (1 << sq) == 0 {
 		return
 	}
-	*bitboard ^= (1 << squareToBit[sq])
+	// *bitboard ^= (1 << squareToBit[sq])
+	*bitboard ^= (1 << sq)
 }
 
 func (bitboard Bitboard) PrintBoard() {
