@@ -22,7 +22,7 @@ func main() {
 
 	// var board engine.Bitboard = 0
 	engine.GeneratePieceAttacks()
-	engine.PawnAttacks[1][23].PrintBoard()
+	engine.KingAttacks[56].PrintBoard()
 
 
 
