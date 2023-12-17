@@ -59,18 +59,22 @@ func (bitboard Bitboard) GetBit(sq int) int {
 }
 
 func (bitboard *Bitboard) SetBit(sq int) {
-	// *bitboard |= (1 << squareToBit[sq])
 	*bitboard |= (1 << sq)
 }
 
 func (bitboard *Bitboard) PopBit(sq int) {
-	if *bitboard & (1 << sq) == 0 {
-		return
-	}
-	// *bitboard ^= (1 << squareToBit[sq])
+	if *bitboard & (1 << sq) == 0 { return }
 	*bitboard ^= (1 << sq)
 }
 
+ // retreive number of set bits in bitboard
+ func (bitboard Bitboard) CountBits() int {
+	ans := 0
+	for bitboard != 0 { bitboard &= (bitboard - 1); ans++; }
+	return ans
+ }
+
+ // prints board from top to bottom with lsb = a8 and msb = h1
 func (bitboard Bitboard) PrintBoard() {
 	// print rank (8, 7, 6...)
 	for i := 0; i < 8; i++ {
@@ -92,5 +96,3 @@ func (bitboard Bitboard) PrintBoard() {
 	fmt.Println("  a b c d e f g h")
 	fmt.Println("Bitboard as decimal:", bitboard)
  }
-
-

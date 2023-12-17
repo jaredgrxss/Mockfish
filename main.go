@@ -2,8 +2,8 @@ package main
 
 import (
 	"Mockfish/engine"
-	
-)
+	"fmt"
+)	
 
 /* 
 var squareToBit = map[string]uint64 {
@@ -20,11 +20,16 @@ var squareToBit = map[string]uint64 {
 */ 
 func main() {
 
-	// var board engine.Bitboard = 0
-	engine.GeneratePieceAttacks()
-	engine.KingAttacks[56].PrintBoard()
+	
+	// occupied squares 
+	// var block engine.Bitboard = 0
+	// block.SetBit(11); block.SetBit(51); block.SetBit(33); block.SetBit(38)
+	// block.PrintBoard()
+	// var board = engine.OnTheFlyRookAttacks(35, block)
+	// board.PrintBoard()
 
-
+	var block engine.Bitboard = 324
+	fmt.Println(block.CountBits())
 
 	// for i := 0; i < 8; i++ {
 	// 	for j := 0; j < 8; j++ {

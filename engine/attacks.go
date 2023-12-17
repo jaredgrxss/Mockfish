@@ -35,8 +35,7 @@ package engine
 
 */
 
-// constants to help with correctly generating piece moves
-// in case of overflow
+// constants to help with correctly generating leaper piece moves in case they wrap around
 const NOT_A_FILE Bitboard = 18374403900871474942
 const NOT_H_FILE Bitboard = 9187201950435737471
 const NOT_HG_FILE Bitboard = 4557430888798830399
@@ -156,6 +155,117 @@ func genKingAttacks(sq int) Bitboard {
 
 	return attacks
 }
+
+// function to generate bishop attack rays used in magic bitboards
+func genBishopAttacks(sq int) Bitboard {
+	// return board for all valid attacks
+	var attacks Bitboard = 0
+
+	var rank, file int
+
+	var target_rank = sq / 8; var target_file = sq % 8
+
+	// mask relevant occupancy bishop bits
+	for rank, file = target_rank + 1, target_file + 1; rank < 7 && file < 7; rank, file = rank + 1, file + 1 {
+		attacks |= (1 << (rank * 8 + file))
+	}
+	for rank, file = target_rank - 1, target_file + 1; rank > 0 && file < 7; rank, file = rank - 1, file + 1 {
+		attacks |= (1 << (rank * 8 + file))
+	}
+	for rank, file = target_rank + 1, target_file - 1; rank < 7 && file > 0; rank, file = rank + 1, file - 1 {
+		attacks |= (1 << (rank * 8 + file))
+	}
+	for rank, file = target_rank - 1, target_file - 1; rank > 0 && file > 0; rank, file = rank - 1, file - 1 {
+		attacks |= (1 << (rank * 8 + file))
+	}
+	return attacks
+}
+
+// function to generate rook attack rays for magic bitboards
+func genRookAttacks(sq int) Bitboard {
+	var attacks Bitboard = 0
+
+	var rank, file int
+
+
+	var target_rank = sq / 8; var target_file = sq % 8
+
+	// mask relevant occupancy rook bits
+	for rank = target_rank + 1; rank < 7; rank++ {
+		attacks |= (1 << (rank * 8 + target_file))
+	}
+	for rank = target_rank - 1; rank > 0; rank-- {
+		attacks |= (1 << (rank * 8 + target_file))
+	}
+	for file = target_file + 1; file < 7; file++ {
+		attacks |= (1 << (target_rank * 8 + file))
+	}
+	for file = target_file - 1; file > 0; file-- {
+		attacks |= (1 << (target_rank * 8 + file))
+	}
+
+	return attacks
+}
+
+// function to generate bishop attack rays used in magic bitboards given a blocker configuration
+func onTheFlyBishopAttacks(sq int, blockers Bitboard) Bitboard {
+	// return board for all valid attacks
+	var attacks Bitboard = 0
+
+	var rank, file int
+
+	var target_rank = sq / 8; var target_file = sq % 8
+
+	// gen bishop actual attacks given a blocker config, if we hit a blocker, break
+	for rank, file = target_rank + 1, target_file + 1; rank < 8 && file < 8; rank, file = rank + 1, file + 1 {
+		attacks |= (1 << (rank * 8 + file))
+		if (1 << (rank * 8 + file)) & blockers != 0 { break }
+	}
+	for rank, file = target_rank - 1, target_file + 1; rank >= 0 && file < 8; rank, file = rank - 1, file + 1 {
+		attacks |= (1 << (rank * 8 + file))
+		if (1 << (rank * 8 + file)) & blockers != 0 { break }
+	}
+	for rank, file = target_rank + 1, target_file - 1; rank < 8 && file >= 0; rank, file = rank + 1, file - 1 {
+		attacks |= (1 << (rank * 8 + file))
+		if (1 << (rank * 8 + file)) & blockers != 0 { break }
+	}
+	for rank, file = target_rank - 1, target_file - 1; rank >= 0 && file >= 0; rank, file = rank - 1, file - 1 {
+		attacks |= (1 << (rank * 8 + file))
+		if (1 << (rank * 8 + file)) & blockers != 0 { break }
+	}
+	return attacks
+}
+
+// function to generate rook attack rays used in magic bitboards given a blocker configuration
+func onTheFlyRookAttacks(sq int, blockers Bitboard) Bitboard {
+	// return board for all valid attacks given blockers
+	var attacks Bitboard = 0
+
+	var rank, file int
+
+	var target_rank = sq / 8; var target_file = sq % 8
+
+	// gen rook actual attacks given a blocker config, if we hit a blocker, break
+	for rank = target_rank + 1; rank < 8; rank++ {
+		attacks |= (1 << (rank * 8 + target_file))
+		if (1 << (rank * 8 + target_file)) & blockers != 0 { break }
+	}
+	for rank = target_rank - 1; rank >= 0; rank-- {
+		attacks |= (1 << (rank * 8 + target_file))
+		if (1 << (rank * 8 + target_file)) & blockers != 0 { break }
+	}
+	for file = target_file + 1; file < 8; file++ {
+		attacks |= (1 << (target_rank * 8 + file))
+		if (1 << (target_rank * 8 + file)) & blockers != 0 { break }
+	}
+	for file = target_file - 1; file >= 0; file-- {
+		attacks |= (1 << (target_rank * 8 + file))
+		if (1 << (target_rank * 8 + file)) & blockers != 0 { break }
+	}
+	
+	return attacks
+}
+
 
 func GeneratePieceAttacks() {
 	for i := 0; i < 64; i++ {
