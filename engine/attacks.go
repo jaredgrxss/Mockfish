@@ -1,12 +1,8 @@
 package engine
 
-/*******************************************************
-	INFORMATION ABOUT PRE-CALCULATED PIECE ATTACKS
-	
-	Structure :
-	2D Array -> [sideToMove][sqaure]
+/********************************************************
+	PRECOMPUTED ATTACK INFO USED FOR MOVE GENERATION
 ********************************************************/
-
 
 /* 
 	NOT A FILE 
@@ -35,17 +31,57 @@ package engine
 
 */
 
+/**********************
+LEAPING PIECE INFO
+**********************/
+
 // constants to help with correctly generating leaper piece moves in case they wrap around
 const NOT_A_FILE Bitboard = 18374403900871474942
 const NOT_H_FILE Bitboard = 9187201950435737471
 const NOT_HG_FILE Bitboard = 4557430888798830399
 const NOT_AB_FILE Bitboard = 18229723555195321596
 
+// state for PRNG func
+var state uint32 = 1010243240
+
 // constants to store piece info for leaping pieces
 const White, Black = 0, 1
-var PawnAttacks [2][64] Bitboard
-var KnightAttacks [64] Bitboard
-var KingAttacks[64] Bitboard
+var PawnAttacks [2][64]Bitboard
+var KnightAttacks [64]Bitboard
+var KingAttacks [64]Bitboard
+
+
+/***************************************
+	MAGIC BITBOARD / SLIDING PIECE INFO
+***************************************/
+
+// total bits a bishop can move given a sqaure
+var BitCountBishop [64]int = [64]int {
+	6, 5, 5, 5, 5, 5, 5, 6, 
+	5, 5, 5, 5, 5, 5, 5, 5, 
+	5, 5, 7, 7, 7, 7, 5, 5, 
+	5, 5, 7, 9, 9, 7, 5, 5, 
+	5, 5, 7, 9, 9, 7, 5, 5, 
+	5, 5, 7, 7, 7, 7, 5, 5, 
+	5, 5, 5, 5, 5, 5, 5, 5, 
+	6, 5, 5, 5, 5, 5, 5, 6, 
+}
+// total bits a rook can move given a square
+var BitCountRook [64]int = [64]int {
+	12, 11, 11, 11, 11, 11, 11, 12, 
+	11, 10, 10, 10, 10, 10, 10, 11, 
+	11, 10, 10, 10, 10, 10, 10, 11, 
+	11, 10, 10, 10, 10, 10, 10, 11, 
+	11, 10, 10, 10, 10, 10, 10, 11, 
+	11, 10, 10, 10, 10, 10, 10, 11, 
+	11, 10, 10, 10, 10, 10, 10, 11, 
+	12, 11, 11, 11, 11, 11, 11, 12, 
+}
+
+
+/************************
+	HELPER FUNCTIONS 
+************************/
 
 // bitshifts for pawns is = 7,9
 func genPawnAttacks(side uint64, sq int) Bitboard {
@@ -156,7 +192,7 @@ func genKingAttacks(sq int) Bitboard {
 	return attacks
 }
 
-// function to generate bishop attack rays used in magic bitboards
+// function to generate bishop attack rays (assuming NO blockers)
 func genBishopAttacks(sq int) Bitboard {
 	// return board for all valid attacks
 	var attacks Bitboard = 0
@@ -181,7 +217,7 @@ func genBishopAttacks(sq int) Bitboard {
 	return attacks
 }
 
-// function to generate rook attack rays for magic bitboards
+// function to generate rook attack rays (assuming NO blockers)
 func genRookAttacks(sq int) Bitboard {
 	var attacks Bitboard = 0
 
@@ -207,7 +243,7 @@ func genRookAttacks(sq int) Bitboard {
 	return attacks
 }
 
-// function to generate bishop attack rays used in magic bitboards given a blocker configuration
+// function to generate bishop attack rays  given a blocker configuration
 func onTheFlyBishopAttacks(sq int, blockers Bitboard) Bitboard {
 	// return board for all valid attacks
 	var attacks Bitboard = 0
@@ -236,7 +272,7 @@ func onTheFlyBishopAttacks(sq int, blockers Bitboard) Bitboard {
 	return attacks
 }
 
-// function to generate rook attack rays used in magic bitboards given a blocker configuration
+// function to generate rook attack rays given a blocker configuration
 func onTheFlyRookAttacks(sq int, blockers Bitboard) Bitboard {
 	// return board for all valid attacks given blockers
 	var attacks Bitboard = 0
@@ -266,12 +302,64 @@ func onTheFlyRookAttacks(sq int, blockers Bitboard) Bitboard {
 	return attacks
 }
 
+// find occupancy board/bits on a given attack board for sliding pieces
+// (4096 or 2^12 possible configurations have to consider, which is not a lot)
+func setOccupancy(idx int, bitCnt int, attackMask Bitboard) Bitboard {
+	// our final board that will given occupant bits
+	var occupancy Bitboard = 0
 
+	// loop for number of bits we have in a current board
+	for i := 0; i < bitCnt; i++ {
+		// get LSB idx of attackMask then pop it off
+		sq := attackMask.LSBIndex(); attackMask.PopBit(sq)
+		// set occupant sq if it is present 
+		if idx & (1 << i) != 0 {
+			occupancy |= (1 << sq)
+		}
+	}
+
+	// return back this occupancy configuration
+	return occupancy
+}
+
+// psuedo 32 bit random number generator for PRNG 
+func Get_u32_rand() uint32 {
+	// retreive current state
+	x := state
+
+	// xor shift 32 algorithm
+	x ^= (x << 13)
+	x ^= (x >> 17)
+	x ^= (x << 5)
+	state = x 
+
+	// return PRN
+	return x
+}
+
+// psudo 64 bit random number generator 
+func Get_u64_rand() uint64 {
+	// get 4 random numbers
+	var n1, n2, n3, n4 uint64
+	n1 = uint64(Get_u32_rand()) & 0xFFFF; n2 = uint64(Get_u32_rand()) & 0xFFFF
+	n3 = uint64(Get_u32_rand()) & 0xFFFF; n4 = uint64(Get_u32_rand()) & 0xFFFF
+
+	// return 64 bit PRNG
+	return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48)
+}
+
+
+
+/****************************
+	PRECOMPUTE EVERYTHING 	
+****************************/
 func GeneratePieceAttacks() {
 	for i := 0; i < 64; i++ {
 		PawnAttacks[0][i] = genPawnAttacks(0, i)
 		PawnAttacks[1][i] = genPawnAttacks(1, i)
 		KnightAttacks[i] = genKnightAttacks(i)
 		KingAttacks[i] = genKingAttacks(i)
+		// BitCountBishop[i] = genBishopAttacks(i).CountBits()
+		// BitCountRook[i] = genRookAttacks(i).CountBits()
 	}
 }

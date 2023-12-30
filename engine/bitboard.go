@@ -74,6 +74,15 @@ func (bitboard *Bitboard) PopBit(sq int) {
 	return ans
  }
 
+ // retreive the LSB set-bit index (0-index) of a bitboard 
+ func (bitboard Bitboard) LSBIndex() int {
+	if (bitboard == 0) { return 0 }
+	// only leaves the LSB on and then flips all bits behind this bit, 
+	bitboard &= -bitboard; bitboard--;
+	// this allows counting to return the account index of a bit (0 - indexed)
+	return bitboard.CountBits()
+ }
+
  // prints board from top to bottom with lsb = a8 and msb = h1
 func (bitboard Bitboard) PrintBoard() {
 	// print rank (8, 7, 6...)
