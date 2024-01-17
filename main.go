@@ -19,14 +19,11 @@ import (
 func main() {
 
 	// occupied squares 
-	var block engine.Bitboard = 0
-	block.SetBit(11); block.SetBit(51); block.SetBit(33); block.SetBit(38)
-	block.PrintBoard()
+	// var block engine.Bitboard = 0
+	// block.SetBit(11); block.SetBit(51); block.SetBit(33); block.SetBit(38)
+	// block.PrintBoard()
 
-	nn := engine.Bitboard(engine.Get_u32_rand())
-	nn.PrintBoard()
-	nn = (nn & 0xFFFF)
-	nn.PrintBoard()
+	engine.GeneratePieceAttacks()
 	// var bishopAttacks = engine.GenBishopAttacks(35)
 	
 	// for i := 0; i < 100; i++ {
