@@ -34,7 +34,7 @@ import (
 */
 
 /**********************
-LEAPING PIECE INFO
+LEAPING PIECE ATTACK INFO
 **********************/
 
 // constants to help with correctly generating leaper piece moves in case they wrap around
@@ -216,6 +216,14 @@ var BishopMagics [64]uint64 = [64]uint64 {
 	0x80508450068228,
 	0x8600102021410,
 }
+
+// sliding piece masks info
+var rookMasks [64]Bitboard
+var bishopMasks [64]Bitboard 
+
+// magic / sliding piece attack tables
+var RookAttacks [64][4096]Bitboard 
+var BishopAtacks [64][512]Bitboard
 
 
 /************************
@@ -520,7 +528,7 @@ func find_magic_number(sq int, bitCnt int, flag int) uint64 {
 
 	// get attack rays for current piece
 	var pieceAttacks Bitboard
-	if (flag == 0) {
+	if flag == 0 {
 		pieceAttacks = genRookAttacks(sq)
 	} else {
 		pieceAttacks = genBishopAttacks(sq)
@@ -531,7 +539,7 @@ func find_magic_number(sq int, bitCnt int, flag int) uint64 {
 		// get occupancies for this configuration
 		occupancies[i] = setOccupancy(i, bitCnt, pieceAttacks)
 
-		if (flag == 0) {
+		if flag == 0 {
 			attacks[i] = onTheFlyRookAttacks(sq, occupancies[i])
 		} else {
 			attacks[i] = onTheFlyBishopAttacks(sq, occupancies[i])
@@ -543,7 +551,7 @@ func find_magic_number(sq int, bitCnt int, flag int) uint64 {
 		var magic uint64 = GenerateMagicNumber()
 
 		// pass magic numbers that won't work
-		if (count_bits((uint64(pieceAttacks) * magic) & 0xFF00000000000000) < 6) { continue }
+		if count_bits((uint64(pieceAttacks) * magic) & 0xFF00000000000000) < 6 { continue }
 
 		// init our used attacks
 		for j := 0; j < len(usedAttacks); j++ { usedAttacks[j] = 0 }
@@ -555,7 +563,7 @@ func find_magic_number(sq int, bitCnt int, flag int) uint64 {
 			magic_index := int((occupancies[index] * Bitboard(magic)) >> (64 - bitCnt))
 			
 			// if magic index works
-			if (usedAttacks[magic_index] == 0) {
+			if usedAttacks[magic_index] == 0 {
 				// set usedAttacks to the attacks of this current square
 				usedAttacks[magic_index] = attacks[index]
 			} else if usedAttacks[magic_index] != attacks[index] {
@@ -563,7 +571,7 @@ func find_magic_number(sq int, bitCnt int, flag int) uint64 {
 				fail = 1
 			}
 		}
-		if (fail == 0) {
+		if fail == 0 {
 			return magic
 		}
 	}
@@ -571,17 +579,64 @@ func find_magic_number(sq int, bitCnt int, flag int) uint64 {
 	return 0
 }
 
-// func Init_magics() {
-// 	// lets loop over 64 board squares 
-// 	for i := 0; i < 64; i++ {
-// 		// init rook magic numbers
-// 		fmt.Printf(" 0x%x,\n", find_magic_number(i, BitCountRook[i], 0))
-// 	}
-// 	fmt.Println()
-// 	for i := 0; i < 64; i++ {
-// 		fmt.Printf(" 0x%x,\n",find_magic_number(i, BitCountBishop[i], 1))
-// 	}
-// }
+// gen slider piece attack tables via magic index : (0 = rook, 1 = bishop for flag)
+func initSlidingPieceAtacks(flag int) {
+	
+	// loop over all 64 board squares 
+	for i := 0; i < 64; i++ {
+		bishopMasks[i] = genBishopAttacks(i)
+		rookMasks[i] = genRookAttacks(i)
+
+		// get our current attack mask
+		var currentAttackMask Bitboard
+
+		if flag == 0 {
+			currentAttackMask = rookMasks[i]
+		} else {
+			currentAttackMask = bishopMasks[i]
+		}
+
+		// get relevant bit count for occupant squares
+		bitCnt := currentAttackMask.CountBits()
+		occupancies := 1 << bitCnt
+
+		for j := 0; j < occupancies; j++ {
+			if flag == 0 {
+				// get our current occupant bitboard and magic index
+				occupancy_set := setOccupancy(j, bitCnt, currentAttackMask)
+				magic_idx := (occupancy_set * Bitboard(RookMagics[i])) >> (64 - BitCountRook[i])
+
+				// update our attack table
+				RookAttacks[i][magic_idx] = onTheFlyRookAttacks(i, occupancy_set)
+
+			} else {
+				// get our current occupant bitboard and magic index
+				occupancy_set := setOccupancy(j, bitCnt, currentAttackMask)
+				magic_idx := (occupancy_set * Bitboard(BishopMagics[i])) >> (64 - BitCountBishop[i])
+
+				// update our attack table
+				BishopAtacks[i][magic_idx] = onTheFlyBishopAttacks(i, occupancy_set)
+			}
+		}
+
+	}
+}
+
+// retreive a bishop attack given a square and an occupancy
+func getBishopAttack(sq int, occupancy Bitboard) Bitboard {
+	occupancy &= bishopMasks[sq]
+	occupancy *= Bitboard(BishopMagics[sq])
+	occupancy >>= 64 - BitCountBishop[sq]
+}
+
+// retreive a rook attack given a square and an occupancy
+func getRookAttack(sq int, occupancy Bitboard) Bitboard {
+	occupancy &= rookMasks[sq]
+	occupancy *= Bitboard(BishopMagics[sq])
+	occupancy >>= 64 - BitCountRook[sq]
+}
+
+
 
 
 
@@ -599,5 +654,8 @@ func GeneratePieceAttacks() {
 
 		// king attacks
 		KingAttacks[i] = genKingAttacks(i)
+
+		// sliding piece attacks (0 == rook, 1 == bishop)
+		initSlidingPieceAtacks(0); initSlidingPieceAtacks(1)
 	}
 }

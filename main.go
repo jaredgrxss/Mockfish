@@ -17,28 +17,7 @@ import (
 	}
 */ 
 func main() {
-
-	// occupied squares 
-	// var block engine.Bitboard = 0
-	// block.SetBit(11); block.SetBit(51); block.SetBit(33); block.SetBit(38)
-	// block.PrintBoard()
-
 	engine.GeneratePieceAttacks()
-	// var bishopAttacks = engine.GenBishopAttacks(35)
 	
-	// for i := 0; i < 100; i++ {
-	// 	var occupancy = engine.SetOccupancy(i, bishopAttacks.CountBits(), bishopAttacks)
-	// 	occupancy.PrintBoard()
-	// }
 
-	// for i := 0; i < 8; i++ { 
-	// 	for j := 0; j < 8; j++ {
-	// 		sq := (i * 8) + j
-	// 		b := engine.GenBishopAttacks(sq); c := engine.GenRookAttacks(sq)
-	// 		engine.BitCountBishop[sq] = b.CountBits(); engine.BitCountRook[sq] = c.CountBits()
-	// 		fmt.Print(c.CountBits())
-	// 		fmt.Print(", ")
-	// 	}
-	// 	fmt.Println()
- 	// }
 }
