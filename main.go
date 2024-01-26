@@ -15,9 +15,12 @@ import (
 		"a2": 48, "b2": 49, "c2": 50, "d2": 51, "e2": 52, "f2": 53, "g2": 54, "h2": 55, 
 		"a1": 56, "b1": 57, "c1": 58, "d1": 59, "e1": 60, "f1": 61, "g1": 62, "h1": 63,
 	}
-*/ 
+*/
+ 
 func main() {
 	engine.GeneratePieceAttacks()
-	
-
+	var occ engine.Bitboard
+	occ.SetBit(26); occ.SetBit(11); occ.SetBit(30); occ.SetBit(51)
+	rookAtt := engine.GetRookAttack(27, occ)
+	rookAtt.PrintBoard()	
 }

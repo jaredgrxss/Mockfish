@@ -225,10 +225,9 @@ var bishopMasks [64]Bitboard
 var RookAttacks [64][4096]Bitboard 
 var BishopAtacks [64][512]Bitboard
 
-
-/************************
-	HELPER FUNCTIONS 
-************************/
+/**************************************
+	LEAPING PIECE MOVE GENERATION  
+**************************************/
 
 // bitshifts for pawns is = 7,9
 func genPawnAttacks(side uint64, sq int) Bitboard {
@@ -338,6 +337,10 @@ func genKingAttacks(sq int) Bitboard {
 
 	return attacks
 }
+
+/**************************************
+	SLIDING PIECE MOVE GENERATION
+**************************************/
 
 // function to generate bishop attack rays (assuming NO blockers)
 func genBishopAttacks(sq int) Bitboard {
@@ -450,7 +453,7 @@ func onTheFlyRookAttacks(sq int, blockers Bitboard) Bitboard {
 }
 
 // find occupancy board/bits on a given attack board for sliding pieces
-// (4096 or 2^12 possible configurations have to consider, which is not a lot)
+// (4096 or 2^12 possible configurations have to consider at max, which is not a lot)
 func setOccupancy(idx int, bitCnt int, attackMask Bitboard) Bitboard {
 	// our final board that will given occupant bits
 	var occupancy Bitboard = 0
@@ -469,10 +472,9 @@ func setOccupancy(idx int, bitCnt int, attackMask Bitboard) Bitboard {
 	return occupancy
 }
 
-
-/***********************************************
-	HELPERS FOR MAGIC BITBOARD HASHKEY
-***********************************************/
+/******************************
+	MAGIC BITBOARD HASHKEY
+*******************************/
 
 // state for PRNG func
 var random_state uint32 = 1010243240
@@ -623,21 +625,20 @@ func initSlidingPieceAtacks(flag int) {
 }
 
 // retreive a bishop attack given a square and an occupancy
-func getBishopAttack(sq int, occupancy Bitboard) Bitboard {
+func GetBishopAttack(sq int, occupancy Bitboard) Bitboard {
 	occupancy &= bishopMasks[sq]
 	occupancy *= Bitboard(BishopMagics[sq])
 	occupancy >>= 64 - BitCountBishop[sq]
+	return BishopAtacks[sq][occupancy]
 }
 
 // retreive a rook attack given a square and an occupancy
-func getRookAttack(sq int, occupancy Bitboard) Bitboard {
+func GetRookAttack(sq int, occupancy Bitboard) Bitboard {
 	occupancy &= rookMasks[sq]
-	occupancy *= Bitboard(BishopMagics[sq])
+	occupancy *= Bitboard(RookMagics[sq])
 	occupancy >>= 64 - BitCountRook[sq]
+	return RookAttacks[sq][occupancy]
 }
-
-
-
 
 
 /****************************
