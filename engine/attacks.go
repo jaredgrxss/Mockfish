@@ -33,9 +33,9 @@ import (
 
 */
 
-/**********************
-LEAPING PIECE ATTACK INFO
-**********************/
+/*************************************************************
+LEAPING PIECE ATTACK INFO (WHITE = 0 / BLACK = 1, BOTH = 2)
+*************************************************************/
 
 // constants to help with correctly generating leaper piece moves in case they wrap around
 const NOT_A_FILE Bitboard = 18374403900871474942
@@ -44,7 +44,6 @@ const NOT_HG_FILE Bitboard = 4557430888798830399
 const NOT_AB_FILE Bitboard = 18229723555195321596
 
 // constants to store attack maps for leaping pieces
-const White, Black = 0, 1
 var PawnAttacks [2][64]Bitboard
 var KnightAttacks [64]Bitboard
 var KingAttacks [64]Bitboard
