@@ -6,42 +6,15 @@ import (
 	PRECOMPUTED ATTACK INFO USED FOR MOVE GENERATION
 ********************************************************/
 
-/* 
-	NOT A FILE 
-		8 0 1 1 1 1 1 1 1 
-		7 0 1 1 1 1 1 1 1 
-		6 0 1 1 1 1 1 1 1 
-		5 0 1 1 1 1 1 1 1 
-		4 0 1 1 1 1 1 1 1 
-		3 0 1 1 1 1 1 1 1 
-		2 0 1 1 1 1 1 1 1 
-		1 0 1 1 1 1 1 1 1 
-		a b c d e f g h
-
-
-	NOT H FILE 
-
-		8 1 1 1 1 1 1 1 0 
-		7 1 1 1 1 1 1 1 0 
-		6 1 1 1 1 1 1 1 0 
-		5 1 1 1 1 1 1 1 0 
-		4 1 1 1 1 1 1 1 0 
-		3 1 1 1 1 1 1 1 0 
-		2 1 1 1 1 1 1 1 0 
-		1 1 1 1 1 1 1 1 0 
-		a b c d e f g h
-
-*/
-
-/*************************************************************
-LEAPING PIECE ATTACK INFO (WHITE = 0 / BLACK = 1, BOTH = 2)
-*************************************************************/
+/*******************************************************************
+	LEAPING PIECE ATTACK INFO (WHITE = 0 / BLACK = 1, BOTH = 2)
+*******************************************************************/
 
 // constants to help with correctly generating leaper piece moves in case they wrap around
-const NOT_A_FILE Bitboard = 18374403900871474942
-const NOT_H_FILE Bitboard = 9187201950435737471
-const NOT_HG_FILE Bitboard = 4557430888798830399
-const NOT_AB_FILE Bitboard = 18229723555195321596
+const NOT_A_FILE Bitboard = 18374403900871474942 // all bits set not on A file
+const NOT_H_FILE Bitboard = 9187201950435737471 // all bits set not on H file
+const NOT_HG_FILE Bitboard = 4557430888798830399 // all bits set not on H or G file (for knight moves)
+const NOT_AB_FILE Bitboard = 18229723555195321596 // all bits set not on A or B file (for knight moves)
 
 // constants to store attack maps for leaping pieces
 var PawnAttacks [2][64]Bitboard
@@ -146,7 +119,6 @@ var RookMagics [64]uint64 = [64]uint64 {
 	0x8350013000820824,
 	0x8482084489002402,   
 }
-
 
 // magic numbers for bishop
 var BishopMagics [64]uint64 = [64]uint64 {
@@ -638,7 +610,6 @@ func GetRookAttack(sq int, occupancy Bitboard) Bitboard {
 	occupancy >>= 64 - BitCountRook[sq]
 	return RookAttacks[sq][occupancy]
 }
-
 
 /****************************
 	PRECOMPUTE ATTACKS 	
