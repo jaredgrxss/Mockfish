@@ -2,12 +2,14 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
 )
 
 // Types
 type Bitboard uint64
 type Piece int
 
+// starter FEN strings
 var EMPTY_BOARD = "8/8/8/8/8/8/8/8 w - - "
 var START_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
 var TRICKY_POSITION = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
@@ -17,11 +19,6 @@ var CMK_POSITION = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b
 /****************************************
 	BOARD REPRESENTATION HELPERS
 ****************************************/
-var GameBoards [12]Bitboard // 12 boards for each piece + color
-var GameOccupancy [3]Bitboard // white = 0, black = 1, both = 2
-var SideToMove = -1
-var Enpassant int = 64
-
 /*
 	castling representation info... 
 
@@ -32,7 +29,10 @@ var Enpassant int = 64
 	0100	4		black king can castle king side
 	1000	8		black king can caslte queen side
 */
-
+var GameBoards [12]Bitboard // 12 boards for each piece + color (6 * 2)
+var GameOccupancy [3]Bitboard // white = 0, black = 1, both = 2
+var SideToMove = -1
+var Enpassant int = 64
 var Castle int
 const White_king_side, White_queen_side, Black_king_side, Black_queen_side = 1, 2, 4, 8
 
@@ -241,7 +241,7 @@ func (bitboard Bitboard) PrintBitboard() {
 	SideToMove = 0; Castle = 15;
 }
 
-func Reset() {
+func ResetGameStateVariables() {
 	// reset game boards
 	for i := WhitePawn; i <= BlackKing; i++ {
 		GameBoards[i] = 0
@@ -254,11 +254,10 @@ func Reset() {
 	
 	// reset game state
 	SideToMove = 0; Enpassant = 64; Castle = 0
-
 }
 
 func ParseFen(fen string) {
-	Reset()
+	ResetGameStateVariables()
 	idx := 0
 	// looping ranks (8, 7, 6, ...)
 	for i := 0; i < 8; i++ {
@@ -266,13 +265,56 @@ func ParseFen(fen string) {
 		for j := 0; j < 8; j++ {
 			// square 
 			sq := i * 8 + j
+
+			// piece is present
 			if (string(fen[idx]) >= "A" && string(fen[idx]) <= "Z") || (string(fen[idx]) >= "a" && string(fen[idx]) <= "z") {
-				pieceType := Ascii_to_Type[fen]
+				pieceType := Ascii_to_Type[string(fen[idx])]
 				GameBoards[pieceType].SetBit(sq)
-				idx++	
-			} else {
-				
+				idx++
 			}
+
+			// file separator
+			if string(fen[idx]) >= "0" && string(fen[idx]) <= "9" {
+				offset, err := strconv.Atoi(string(fen[idx]))
+				if err != nil {
+					fmt.Println("ERROR PARSING FEN STRING", err)
+					return
+				}
+
+				// piece := -1
+				// for i := WhitePawn; i <= BlackKing; i++ {
+				// 	if GameBoards[i].GetBit(sq) == 1 {
+				// 		piece = int(i)
+				// 	}
+				// }
+				// if piece == -1 {
+				// 	j--;
+				// }
+				
+				var present int
+				for i := WhitePawn; i <= BlackKing; i++ {
+					present |= int(GameBoards[i])
+				}
+				if present & (1 << sq) == 0 {
+					j--
+				}
+
+				j += offset
+				idx++
+			}
+
+			// rank separator
+			if string(fen[idx]) == "/" {
+				idx++
+			}			
 		}
 	}
+
+	idx++
+	if string(fen[idx]) == "w" {
+		SideToMove = White
+	} else {
+		SideToMove = Black
+	}
+	fmt.Println("FEN STRING:", fen)
 }
