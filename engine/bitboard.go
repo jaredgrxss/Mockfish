@@ -8,8 +8,9 @@ import (
 // Types
 type Bitboard uint64
 type Piece int
+type Square int
 
-// starter FEN strings
+// FEN strings
 var EMPTY_BOARD = "8/8/8/8/8/8/8/8 w - - "
 var START_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
 var TRICKY_POSITION = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
@@ -57,8 +58,19 @@ var Ascii_to_Type = map[string]Piece {
 	"p": BlackPawn, "n": BlackKnight, "b": BlackBishop, "r": BlackRook, "q": BlackQueen, "k": BlackKing,
 }
 
+var StringSquareToBit = map[string]Square {
+	"a8": A8, "b8": B8, "c8": C8, "d8": D8, "e8": E8, "f8": F8, "g8": G8, "h8": H8,
+	"a7": A7, "b7": B7, "c7": C7, "d7": D7, "e7": E7, "f7": F7, "g7": G7, "h7": H7, 
+	"a6": A6, "b6": B6, "c6": C6, "d6": D6, "e6": E6, "f6": F6, "g6": G6, "h6": H6,
+	"a5": A5, "b5": B5, "c5": C5, "d5": D5, "e5": E5, "f5": F5, "g5": G5, "h5": H5, 
+	"a4": A4, "b4": B4, "c4": C4, "d4": D4, "e4": E4, "f4": F4, "g4": G4, "h4": H4, 
+	"a3": A3, "b3": B3, "c3": C3, "d3": D3, "e3": E3, "f3": F3, "g3": G3, "h3": H3, 
+	"a2": A2, "b2": B2, "c2": C2, "d2": D2, "e2": E2, "f2": F2, "g2": G2, "h2": H2, 
+	"a1": A1, "b1": B1, "c1": C1, "d1": D1, "e1": E1, "f1": F1, "g1": G1, "h1": H1, 
+}
+
 const (
-	A8 = iota; B8; C8; D8; E8; F8; G8; H8
+	A8 Square = iota; B8; C8; D8; E8; F8; G8; H8
 	A7; B7; C7; D7; E7; F7; G7; H7 
 	A6; B6; C6; D6; E6; F6; G6; H6
 	A5; B5; C5; D5; E5; F5; G5; H5 
@@ -69,7 +81,7 @@ const (
 )
 
 /**********************************************************************
-		BIT OPERATIONS FOR BITBOARD (LSB == a8, MSB == h1)
+		BITBOARD OPERATIONS (LSB == a8, MSB == h1)
 		Board is printed from top to bottom from whites perspective 
 **********************************************************************/
 func (bitboard Bitboard) GetBit(sq int) int {
@@ -106,6 +118,9 @@ func (bitboard *Bitboard) PopBit(sq int) {
 	return bitboard.CountBits()
  }
 
+ /************************************
+ 	PRINTING GAMEBOARD OPERATIONS 
+ ************************************/
  // prints a bitboard from top to bottom with lsb = a8 and msb = h1
 func (bitboard Bitboard) PrintBitboard() {
 	// print rank (8, 7, 6...)
@@ -131,7 +146,6 @@ func (bitboard Bitboard) PrintBitboard() {
 
  // prints game board from top to bottom with lsb = a8 and msb = h1
  func PrintGameboard() {
-	fmt.Println()
 	// looping ranks (8, 7, 6, ...)
 	for i := 0; i < 8; i++ {
 		// looping files (a, b, c, ...)
@@ -182,64 +196,8 @@ func (bitboard Bitboard) PrintBitboard() {
 	if (Castle & Black_king_side != 0) { BK = "k" } else { BK = "-"}
 	if (Castle & Black_queen_side != 0) { BQ = "q" } else { BQ = "-"}
 	fmt.Println("    Castling: ", WK, WQ, BK, BQ)
+	fmt.Println()
  }
-
- func SetInitBoardState() {
-	// white pawns
-	GameBoards[WhitePawn].SetBit(A2)
-	GameBoards[WhitePawn].SetBit(B2)
-	GameBoards[WhitePawn].SetBit(C2)
-	GameBoards[WhitePawn].SetBit(D2)
-	GameBoards[WhitePawn].SetBit(E2)
-	GameBoards[WhitePawn].SetBit(F2)
-	GameBoards[WhitePawn].SetBit(G2)
-	GameBoards[WhitePawn].SetBit(H2)
-
-	// white knights
-	GameBoards[WhiteKnight].SetBit(B1)
-	GameBoards[WhiteKnight].SetBit(G1)
-
-	// white bishops
-	GameBoards[WhiteBishop].SetBit(C1)
-	GameBoards[WhiteBishop].SetBit(F1)
-
-	// white rooks
-	GameBoards[WhiteRook].SetBit(A1)
-	GameBoards[WhiteRook].SetBit(H1)
-
-	// white queen + king
-	GameBoards[WhiteQueen].SetBit(D1)
-	GameBoards[WhiteKing].SetBit(E1)
-
-	// black pawns
-	GameBoards[BlackPawn].SetBit(A7)
-	GameBoards[BlackPawn].SetBit(B7)
-	GameBoards[BlackPawn].SetBit(C7)
-	GameBoards[BlackPawn].SetBit(D7)
-	GameBoards[BlackPawn].SetBit(E7)
-	GameBoards[BlackPawn].SetBit(F7)
-	GameBoards[BlackPawn].SetBit(G7)
-	GameBoards[BlackPawn].SetBit(H7)
-
-	// black knights 
-	GameBoards[BlackKnight].SetBit(B8)
-	GameBoards[BlackKnight].SetBit(G8)
-
-	// black bishops
-	GameBoards[BlackBishop].SetBit(C8)
-	GameBoards[BlackBishop].SetBit(F8)
-
-	// black rooks 
-	GameBoards[BlackRook].SetBit(A8)
-	GameBoards[BlackRook].SetBit(H8)
-
-	// black queen + king
-	GameBoards[BlackQueen].SetBit(D8)
-	GameBoards[BlackKing].SetBit(E8)
-
-	// side
-	SideToMove = 0; Castle = 15;
-}
 
 func ResetGameStateVariables() {
 	// reset game boards
@@ -290,7 +248,7 @@ func ParseFen(fen string) {
 				// if piece == -1 {
 				// 	j--;
 				// }
-				
+
 				var present int
 				for i := WhitePawn; i <= BlackKing; i++ {
 					present |= int(GameBoards[i])
@@ -310,11 +268,50 @@ func ParseFen(fen string) {
 		}
 	}
 
+	// get side to move
 	idx++
 	if string(fen[idx]) == "w" {
 		SideToMove = White
 	} else {
 		SideToMove = Black
 	}
+
+	// get castling rights 
+	idx += 2;
+	for string(fen[idx]) != " " {
+		if string(fen[idx]) == "K" {
+			Castle |= White_king_side
+		} else if string(fen[idx]) == "Q" {
+			Castle |= White_queen_side
+		} else if string(fen[idx]) == "k" {
+			Castle |= Black_king_side
+		} else if string(fen[idx]) == "q" {
+			Castle |= Black_queen_side
+		}
+		idx++
+	}
+
+	// get enpessant 
+	idx++
+	if string(fen[idx]) != "-" {
+		Enpassant = int(StringSquareToBit[string(fen[idx]) + string(fen[idx + 1])])
+		idx++
+	}
+
+	// loop over white bitboards
+	for i := WhitePawn; i <= WhiteKing; i++ {
+		GameOccupancy[White] |= GameBoards[i]
+	}
+
+	// loop over black bitboards
+	for i := BlackPawn; i <= BlackKing; i++ {
+		GameOccupancy[Black] |= GameBoards[i]
+		GameOccupancy[Both] |= GameBoards[i]
+	}
+
+	// set occupancy for both
+	GameOccupancy[Both] |= GameOccupancy[White]
+	GameOccupancy[Both] |= GameOccupancy[Black]
+
 	fmt.Println("FEN STRING:", fen)
 }

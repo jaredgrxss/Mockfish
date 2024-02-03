@@ -21,7 +21,6 @@ var PawnAttacks [2][64]Bitboard
 var KnightAttacks [64]Bitboard
 var KingAttacks [64]Bitboard
 
-
 /***************************************
 	MAGIC BITBOARD / SLIDING PIECE INFO
 ***************************************/
@@ -194,7 +193,7 @@ var bishopMasks [64]Bitboard
 
 // magic / sliding piece attack tables
 var RookAttacks [64][4096]Bitboard 
-var BishopAtacks [64][512]Bitboard
+var BishopAttacks [64][512]Bitboard
 
 /**************************************
 	LEAPING PIECE MOVE GENERATION  
@@ -588,27 +587,46 @@ func initSlidingPieceAtacks(flag int) {
 				magic_idx := (occupancy_set * Bitboard(BishopMagics[i])) >> (64 - BitCountBishop[i])
 
 				// update our attack table
-				BishopAtacks[i][magic_idx] = onTheFlyBishopAttacks(i, occupancy_set)
+				BishopAttacks[i][magic_idx] = onTheFlyBishopAttacks(i, occupancy_set)
 			}
 		}
 
 	}
 }
 
-// retreive a bishop attack given a square and an occupancy
+// retrieve a bishop attack given a square and an occupancy
 func GetBishopAttack(sq int, occupancy Bitboard) Bitboard {
 	occupancy &= bishopMasks[sq]
 	occupancy *= Bitboard(BishopMagics[sq])
 	occupancy >>= 64 - BitCountBishop[sq]
-	return BishopAtacks[sq][occupancy]
+	return BishopAttacks[sq][occupancy]
 }
 
-// retreive a rook attack given a square and an occupancy
+// retrieve a rook attack given a square and an occupancy
 func GetRookAttack(sq int, occupancy Bitboard) Bitboard {
 	occupancy &= rookMasks[sq]
 	occupancy *= Bitboard(RookMagics[sq])
 	occupancy >>= 64 - BitCountRook[sq]
 	return RookAttacks[sq][occupancy]
+}
+
+// retrieve a queen  attack given a square and an occupancy
+func GetQueenAttack(sq int, occupancy Bitboard) Bitboard {
+	var result Bitboard = 0
+	var rookOccupancy, bishopOccupancy = occupancy, occupancy
+	
+	// calculate based on bishop available attacks 
+	bishopOccupancy &= bishopMasks[sq]
+	bishopOccupancy *= Bitboard(BishopMagics[sq])
+	bishopOccupancy >>= 64 - BitCountBishop[sq]
+
+	// calcualte based on rook available attacks 
+	rookOccupancy &= rookMasks[sq]
+	rookOccupancy *= Bitboard(RookMagics[sq])
+	rookOccupancy >>= 64 - BitCountRook[sq]
+
+	result |= BishopAttacks[sq][bishopOccupancy]; result |= RookAttacks[sq][rookOccupancy]
+	return result
 }
 
 /****************************
