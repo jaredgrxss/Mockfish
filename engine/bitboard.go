@@ -53,7 +53,7 @@ var UnicodePieces [12]string = [12]string {
 	"♟︎", "♞", "♝", "♜", "♛", "♚",
 }
 
-var Ascii_to_Type = map[string]Piece {
+var AsciiToType = map[string]Piece {
 	"P": WhitePawn, "N": WhiteKnight, "B": WhiteBishop, "R": WhiteRook, "Q": WhiteQueen, "K": WhiteKing,
 	"p": BlackPawn, "n": BlackKnight, "b": BlackBishop, "r": BlackRook, "q": BlackQueen, "k": BlackKing,
 }
@@ -226,7 +226,7 @@ func ParseFen(fen string) {
 
 			// piece is present
 			if (string(fen[idx]) >= "A" && string(fen[idx]) <= "Z") || (string(fen[idx]) >= "a" && string(fen[idx]) <= "z") {
-				pieceType := Ascii_to_Type[string(fen[idx])]
+				pieceType := AsciiToType[string(fen[idx])]
 				GameBoards[pieceType].SetBit(sq)
 				idx++
 			}

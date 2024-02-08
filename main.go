@@ -6,12 +6,8 @@ import (
  
 func main() {
 	engine.GeneratePieceAttacks()
-	// engine.ParseFen(engine.TRICKY_POSITION)
-	// engine.PrintGameboard()
-
-	var occupancy engine.Bitboard
-	occupancy.SetBit(int(engine.E6)); occupancy.SetBit(int(engine.B7))
-	occupancy.SetBit(int(engine.B5)); occupancy.SetBit(int(engine.G2))
-	var result = engine.GetQueenAttack(int(engine.D5), occupancy)
-	result.PrintBitboard()
+	// engine.ParseFen("8/8/4R3/3b4/8/8/8/8 w - - ")
+	engine.ParseFen(engine.TRICKY_POSITION)
+	engine.PrintGameboard()
+	engine.PrintAttackedSquares(engine.Black)
 }

@@ -1,7 +1,9 @@
 package engine
+
 import (
 	"fmt"
 )
+
 /********************************************************
 	PRECOMPUTED ATTACK INFO USED FOR MOVE GENERATION
 ********************************************************/
@@ -29,7 +31,7 @@ var KingAttacks [64]Bitboard
 const Rook, Bishop = 0, 1
 
 // total bits a bishop can move given a sqaure
-var BitCountBishop [64]int = [64]int {
+var bitCountBishop [64]int = [64]int {
 	6, 5, 5, 5, 5, 5, 5, 6, 
 	5, 5, 5, 5, 5, 5, 5, 5, 
 	5, 5, 7, 7, 7, 7, 5, 5, 
@@ -40,7 +42,7 @@ var BitCountBishop [64]int = [64]int {
 	6, 5, 5, 5, 5, 5, 5, 6, 
 }
 // total bits a rook can move given a square
-var BitCountRook [64]int = [64]int {
+var bitCountRook [64]int = [64]int {
 	12, 11, 11, 11, 11, 11, 11, 12, 
 	11, 10, 10, 10, 10, 10, 10, 11, 
 	11, 10, 10, 10, 10, 10, 10, 11, 
@@ -52,7 +54,7 @@ var BitCountRook [64]int = [64]int {
 }
 
 // magic numbers for rook
-var RookMagics [64]uint64 = [64]uint64 {
+var rookMagics [64]uint64 = [64]uint64 {
 	0x80051082604004,
 	0x40200040001000,
 	0x880100180486000,
@@ -120,7 +122,7 @@ var RookMagics [64]uint64 = [64]uint64 {
 }
 
 // magic numbers for bishop
-var BishopMagics [64]uint64 = [64]uint64 {
+var bishopMagics [64]uint64 = [64]uint64 {
 	0x8020815401104200,
 	0x8048108410404020,
 	0x42040d08204400,
@@ -447,109 +449,109 @@ func setOccupancy(idx int, bitCnt int, attackMask Bitboard) Bitboard {
 *******************************/
 
 // state for PRNG func
-var random_state uint32 = 1010243240
+// var random_state uint32 = 1010243240
 
 // psuedo 32 bit random number generator for PRNG 
-func Get_u32_rand() uint32 {
-	// retreive current state
-	x := random_state
+// func Get_u32_rand() uint32 {
+// 	// retreive current state
+// 	x := random_state
 
-	// xor shift 32 algorithm
-	x ^= (x << 13)
-	x ^= (x >> 17)
-	x ^= (x << 5)
-	random_state = x 
+// 	// xor shift 32 algorithm
+// 	x ^= (x << 13)
+// 	x ^= (x >> 17)
+// 	x ^= (x << 5)
+// 	random_state = x 
 
-	// return PRN
-	return x
-}
+// 	// return PRN
+// 	return x
+// }
 
-// psudo 64 bit random number generator 
-func Get_u64_rand() uint64 {
-	// get 4 random numbers
-	var n1, n2, n3, n4 uint64
-	n1 = uint64(Get_u32_rand()) & 0xFFFF; n2 = uint64(Get_u32_rand()) & 0xFFFF
-	n3 = uint64(Get_u32_rand()) & 0xFFFF; n4 = uint64(Get_u32_rand()) & 0xFFFF
+// // psudo 64 bit random number generator 
+// func get_u64_rand() uint64 {
+// 	// get 4 random numbers
+// 	var n1, n2, n3, n4 uint64
+// 	n1 = uint64(Get_u32_rand()) & 0xFFFF; n2 = uint64(Get_u32_rand()) & 0xFFFF
+// 	n3 = uint64(Get_u32_rand()) & 0xFFFF; n4 = uint64(Get_u32_rand()) & 0xFFFF
 
-	// return 64 bit PRNG
-	return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48)
-}
+// 	// return 64 bit PRNG
+// 	return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48)
+// }
 
-// count bits of a regular unsigned 64 bit number
-func count_bits(number uint64) int {
-	ans := 0
-	for number != 0 { number &= (number - 1); ans++ }
-	return ans
-}
+// // count bits of a regular unsigned 64 bit number
+// func count_bits(number uint64) int {
+// 	ans := 0
+// 	for number != 0 { number &= (number - 1); ans++ }
+// 	return ans
+// }
 
-// using xor32algo and xor64algo, generate magic numbers
-func GenerateMagicNumber() uint64 {
-	return Get_u64_rand() & Get_u64_rand() & Get_u64_rand()
-}
+// // using xor32algo and xor64algo, generate magic numbers
+// func generateMagicNumber() uint64 {
+// 	return get_u64_rand() & get_u64_rand() & get_u64_rand()
+// }
 
-// generating magic number candidates
-func find_magic_number(sq int, bitCnt int, flag int) uint64 {
-	// get all occupancies for all configurations
-	var occupancies [4096]Bitboard
+// // generating magic number candidates
+// func find_magic_number(sq int, bitCnt int, flag int) uint64 {
+// 	// get all occupancies for all configurations
+// 	var occupancies [4096]Bitboard
 
-	// attack tables
-	var attacks [4096]Bitboard
+// 	// attack tables
+// 	var attacks [4096]Bitboard
 
-	// used attacks
-	var usedAttacks [4096]Bitboard
+// 	// used attacks
+// 	var usedAttacks [4096]Bitboard
 
-	// get attack rays for current piece
-	var pieceAttacks Bitboard
-	if flag == 0 {
-		pieceAttacks = genRookAttacks(sq)
-	} else {
-		pieceAttacks = genBishopAttacks(sq)
-	}
+// 	// get attack rays for current piece
+// 	var pieceAttacks Bitboard
+// 	if flag == 0 {
+// 		pieceAttacks = genRookAttacks(sq)
+// 	} else {
+// 		pieceAttacks = genBishopAttacks(sq)
+// 	}
 
-	var occupant_indices = 1 << bitCnt
-	for i := 0; i < occupant_indices; i++ {
-		// get occupancies for this configuration
-		occupancies[i] = setOccupancy(i, bitCnt, pieceAttacks)
+// 	var occupant_indices = 1 << bitCnt
+// 	for i := 0; i < occupant_indices; i++ {
+// 		// get occupancies for this configuration
+// 		occupancies[i] = setOccupancy(i, bitCnt, pieceAttacks)
 
-		if flag == 0 {
-			attacks[i] = onTheFlyRookAttacks(sq, occupancies[i])
-		} else {
-			attacks[i] = onTheFlyBishopAttacks(sq, occupancies[i])
-		}
-	}
+// 		if flag == 0 {
+// 			attacks[i] = onTheFlyRookAttacks(sq, occupancies[i])
+// 		} else {
+// 			attacks[i] = onTheFlyBishopAttacks(sq, occupancies[i])
+// 		}
+// 	}
 
-	for i := 0; i < 100000000; i++ {
-		// lets generate magic number candidate
-		var magic uint64 = GenerateMagicNumber()
+// 	for i := 0; i < 100000000; i++ {
+// 		// lets generate magic number candidate
+// 		var magic uint64 = generateMagicNumber()
 
-		// pass magic numbers that won't work
-		if count_bits((uint64(pieceAttacks) * magic) & 0xFF00000000000000) < 6 { continue }
+// 		// pass magic numbers that won't work
+// 		if count_bits((uint64(pieceAttacks) * magic) & 0xFF00000000000000) < 6 { continue }
 
-		// init our used attacks
-		for j := 0; j < len(usedAttacks); j++ { usedAttacks[j] = 0 }
+// 		// init our used attacks
+// 		for j := 0; j < len(usedAttacks); j++ { usedAttacks[j] = 0 }
 
-		var index, fail int
-		for index, fail = 0, 0; fail == 0 && index < occupant_indices; index++ {
+// 		var index, fail int
+// 		for index, fail = 0, 0; fail == 0 && index < occupant_indices; index++ {
 
 			
-			magic_index := int((occupancies[index] * Bitboard(magic)) >> (64 - bitCnt))
+// 			magic_index := int((occupancies[index] * Bitboard(magic)) >> (64 - bitCnt))
 			
-			// if magic index works
-			if usedAttacks[magic_index] == 0 {
-				// set usedAttacks to the attacks of this current square
-				usedAttacks[magic_index] = attacks[index]
-			} else if usedAttacks[magic_index] != attacks[index] {
-				// magic index doesn't work
-				fail = 1
-			}
-		}
-		if fail == 0 {
-			return magic
-		}
-	}
-	fmt.Println("MAGIC NUMBER FAILS")
-	return 0
-}
+// 			// if magic index works
+// 			if usedAttacks[magic_index] == 0 {
+// 				// set usedAttacks to the attacks of this current square
+// 				usedAttacks[magic_index] = attacks[index]
+// 			} else if usedAttacks[magic_index] != attacks[index] {
+// 				// magic index doesn't work
+// 				fail = 1
+// 			}
+// 		}
+// 		if fail == 0 {
+// 			return magic
+// 		}
+// 	}
+// 	fmt.Println("MAGIC NUMBER FAILS")
+// 	return 0
+// }
 
 // gen slider piece attack tables via magic index : (0 = rook, 1 = bishop for flag)
 func initSlidingPieceAtacks(flag int) {
@@ -576,7 +578,7 @@ func initSlidingPieceAtacks(flag int) {
 			if flag == 0 {
 				// get our current occupant bitboard and magic index
 				occupancy_set := setOccupancy(j, bitCnt, currentAttackMask)
-				magic_idx := (occupancy_set * Bitboard(RookMagics[i])) >> (64 - BitCountRook[i])
+				magic_idx := (occupancy_set * Bitboard(rookMagics[i])) >> (64 - bitCountRook[i])
 
 				// update our attack table
 				RookAttacks[i][magic_idx] = onTheFlyRookAttacks(i, occupancy_set)
@@ -584,7 +586,7 @@ func initSlidingPieceAtacks(flag int) {
 			} else {
 				// get our current occupant bitboard and magic index
 				occupancy_set := setOccupancy(j, bitCnt, currentAttackMask)
-				magic_idx := (occupancy_set * Bitboard(BishopMagics[i])) >> (64 - BitCountBishop[i])
+				magic_idx := (occupancy_set * Bitboard(bishopMagics[i])) >> (64 - bitCountBishop[i])
 
 				// update our attack table
 				BishopAttacks[i][magic_idx] = onTheFlyBishopAttacks(i, occupancy_set)
@@ -594,49 +596,15 @@ func initSlidingPieceAtacks(flag int) {
 	}
 }
 
-// retrieve a bishop attack given a square and an occupancy
-func GetBishopAttack(sq int, occupancy Bitboard) Bitboard {
-	occupancy &= bishopMasks[sq]
-	occupancy *= Bitboard(BishopMagics[sq])
-	occupancy >>= 64 - BitCountBishop[sq]
-	return BishopAttacks[sq][occupancy]
-}
+/************************************
+	PRECOMPUTE ATTACKS TABLES 	
+************************************/
 
-// retrieve a rook attack given a square and an occupancy
-func GetRookAttack(sq int, occupancy Bitboard) Bitboard {
-	occupancy &= rookMasks[sq]
-	occupancy *= Bitboard(RookMagics[sq])
-	occupancy >>= 64 - BitCountRook[sq]
-	return RookAttacks[sq][occupancy]
-}
-
-// retrieve a queen  attack given a square and an occupancy
-func GetQueenAttack(sq int, occupancy Bitboard) Bitboard {
-	var result Bitboard = 0
-	var rookOccupancy, bishopOccupancy = occupancy, occupancy
-	
-	// calculate based on bishop available attacks 
-	bishopOccupancy &= bishopMasks[sq]
-	bishopOccupancy *= Bitboard(BishopMagics[sq])
-	bishopOccupancy >>= 64 - BitCountBishop[sq]
-
-	// calcualte based on rook available attacks 
-	rookOccupancy &= rookMasks[sq]
-	rookOccupancy *= Bitboard(RookMagics[sq])
-	rookOccupancy >>= 64 - BitCountRook[sq]
-
-	result |= BishopAttacks[sq][bishopOccupancy]; result |= RookAttacks[sq][rookOccupancy]
-	return result
-}
-
-/****************************
-	PRECOMPUTE ATTACKS 	
-****************************/
 func GeneratePieceAttacks() {
 	for i := 0; i < 64; i++ {
 		// pawns white / black
-		PawnAttacks[0][i] = genPawnAttacks(0, i)
-		PawnAttacks[1][i] = genPawnAttacks(1, i)
+		PawnAttacks[White][i] = genPawnAttacks(White, i)
+		PawnAttacks[Black][i] = genPawnAttacks(Black, i)
 
 		// knight attacks
 		KnightAttacks[i] = genKnightAttacks(i)
@@ -647,4 +615,102 @@ func GeneratePieceAttacks() {
 		// sliding piece attacks (0 == rook, 1 == bishop)
 		initSlidingPieceAtacks(0); initSlidingPieceAtacks(1)
 	}
+}
+
+/************************
+	ATTACK HELPERS
+*************************/
+
+// print all attacked sqaures
+func PrintAttackedSquares(side int) {
+	// loop rank
+	for i := 0; i < 8; i++ {
+		// loop file
+		for j := 0; j < 8; j++ {
+			// get square
+			sq := (i * 8) + j
+			// print rank
+			if (j == 0) {
+				fmt.Print(8 - i, " ")
+			}
+			// figure out if current square is attacked
+			if IsSquareAttacked(sq, side) {
+				fmt.Print(1, " ")
+			} else {
+				fmt.Print(0, " ")
+			}
+		}
+		fmt.Println()
+	}
+	// print files
+	fmt.Println("  a b c d e f g h")
+	if side == White { fmt.Println("White pieces can attack... ") }
+	if side == Black { fmt.Println("Black pieces can attack... ") }
+	fmt.Println()
+}
+
+
+// indicates whether a given square is attacked by a given side
+func IsSquareAttacked(sq int, side int) bool {
+	// attacked by white pawns (use other color side to make it easier)
+	if side == White && (PawnAttacks[Black][sq] & GameBoards[WhitePawn]) != 0 { return true }
+	// attacked by black pawns (use other color side to make it easier)
+	if side == Black && (PawnAttacks[White][sq] & GameBoards[BlackPawn]) != 0 { return true }
+	// attacked by white knight
+	if side == White && KnightAttacks[sq] & GameBoards[WhiteKnight] != 0 { return true }
+	// attacked by black knight
+	if side == Black && KnightAttacks[sq] & GameBoards[BlackKnight] != 0 { return true }
+	// attacked by white king
+	if side == White && KingAttacks[sq] & GameBoards[WhiteKing] != 0 { return true }
+	// attacked by black king
+	if side == Black && KingAttacks[sq] & GameBoards[BlackKing] != 0 { return true }
+	// attacked by white bishop
+	if side == White && GetBishopAttack(sq, GameOccupancy[Both]) & GameBoards[WhiteBishop] != 0 { return true } 
+	// attacked by black bishop
+	if side == Black && GetBishopAttack(sq, GameOccupancy[Both]) & GameBoards[BlackBishop] != 0 { return true }
+	// attacked by white rook
+	if side == White && GetRookAttack(sq, GameOccupancy[Both]) & GameBoards[WhiteRook] != 0 { return true }
+	// attacked by black rook
+	if side == Black && GetRookAttack(sq, GameOccupancy[Both]) & GameBoards[BlackRook] != 0 { return true }
+	// attacked by white queen
+	if side == White && GetQueenAttack(sq, GameOccupancy[Both]) & GameBoards[WhiteQueen] != 0 { return true }
+	// attacked by black queen
+	if side == Black && GetQueenAttack(sq, GameOccupancy[Both]) & GameBoards[BlackQueen] != 0 { return true }
+	// default response
+	return false
+}
+
+// retrieve a bishop attack given a square and an occupancy
+func GetBishopAttack(sq int, occupancy Bitboard) Bitboard {
+	occupancy &= bishopMasks[sq]
+	occupancy *= Bitboard(bishopMagics[sq])
+	occupancy >>= 64 - bitCountBishop[sq]
+	return BishopAttacks[sq][occupancy]
+}
+
+// retrieve a rook attack given a square and an occupancy
+func GetRookAttack(sq int, occupancy Bitboard) Bitboard {
+	occupancy &= rookMasks[sq]
+	occupancy *= Bitboard(rookMagics[sq])
+	occupancy >>= 64 - bitCountRook[sq]
+	return RookAttacks[sq][occupancy]
+}
+
+// retrieve a queen  attack given a square and an occupancy
+func GetQueenAttack(sq int, occupancy Bitboard) Bitboard {
+	var result Bitboard = 0
+	var rookOccupancy, bishopOccupancy = occupancy, occupancy
+	
+	// calculate based on bishop available attacks 
+	bishopOccupancy &= bishopMasks[sq]
+	bishopOccupancy *= Bitboard(bishopMagics[sq])
+	bishopOccupancy >>= 64 - bitCountBishop[sq]
+
+	// calcualte based on rook available attacks 
+	rookOccupancy &= rookMasks[sq]
+	rookOccupancy *= Bitboard(rookMagics[sq])
+	rookOccupancy >>= 64 - bitCountRook[sq]
+
+	result |= BishopAttacks[sq][bishopOccupancy]; result |= RookAttacks[sq][rookOccupancy]
+	return result
 }
