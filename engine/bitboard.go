@@ -261,13 +261,8 @@ func ParseFen(fen string) {
 				// }
 
 				var present int
-				for i := WhitePawn; i <= BlackKing; i++ {
-					present |= int(GameBoards[i])
-				}
-				if present & (1 << sq) == 0 {
-					j--
-				}
-
+				for i := WhitePawn; i <= BlackKing; i++ { present |= int(GameBoards[i]) }
+				if present & (1 << sq) == 0 { j-- }
 				j += offset
 				idx++
 			}
@@ -290,15 +285,10 @@ func ParseFen(fen string) {
 	// get castling rights 
 	idx += 2;
 	for string(fen[idx]) != " " {
-		if string(fen[idx]) == "K" {
-			Castle |= White_king_side
-		} else if string(fen[idx]) == "Q" {
-			Castle |= White_queen_side
-		} else if string(fen[idx]) == "k" {
-			Castle |= Black_king_side
-		} else if string(fen[idx]) == "q" {
-			Castle |= Black_queen_side
-		}
+		if string(fen[idx]) == "K" { Castle |= White_king_side }
+		if string(fen[idx]) == "Q" { Castle |= White_queen_side } 
+		if string(fen[idx]) == "k" { Castle |= Black_king_side } 
+		if string(fen[idx]) == "q" { Castle |= Black_queen_side }
 		idx++
 	}
 
@@ -310,9 +300,7 @@ func ParseFen(fen string) {
 	}
 
 	// loop over white bitboards
-	for i := WhitePawn; i <= WhiteKing; i++ {
-		GameOccupancy[White] |= GameBoards[i]
-	}
+	for i := WhitePawn; i <= WhiteKing; i++ { GameOccupancy[White] |= GameBoards[i] }
 
 	// loop over black bitboards
 	for i := BlackPawn; i <= BlackKing; i++ {
