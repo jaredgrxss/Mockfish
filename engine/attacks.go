@@ -19,7 +19,7 @@ const NOT_HG_FILE Bitboard = 4557430888798830399 // all bits set not on H or G f
 const NOT_AB_FILE Bitboard = 18229723555195321596 // all bits set not on A or B file (for knight moves)
 
 // constants to store attack maps for leaping pieces
-var PawnAttacks [2][64]Bitboard
+var PawnAttacks [2][64]Bitboard // [side][square]
 var KnightAttacks [64]Bitboard
 var KingAttacks [64]Bitboard
 
