@@ -250,16 +250,6 @@ func ParseFen(fen string) {
 					return
 				}
 
-				// piece := -1
-				// for i := WhitePawn; i <= BlackKing; i++ {
-				// 	if GameBoards[i].GetBit(sq) == 1 {
-				// 		piece = int(i)
-				// 	}
-				// }
-				// if piece == -1 {
-				// 	j--;
-				// }
-
 				var present int
 				for i := WhitePawn; i <= BlackKing; i++ { present |= int(GameBoards[i]) }
 				if present & (1 << sq) == 0 { j-- }
