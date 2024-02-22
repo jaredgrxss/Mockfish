@@ -7,6 +7,18 @@ import (
 /****************************************
 	HELPERS RELATED TO MOVE GENERATION
 ****************************************/
+/*
+	----- ENCODED DATA -----
+	Things needing to be encoded:
+		1. source square 		0000 0000 0000 0000 0011 1111 (6 bits = max square = 63) HEX = 0x3f
+		2. target square 		0000 0000 0000 1111 1100 0000 (6 bits = max square = 63) HEX = 0xfc0
+		3. piece type 			0000 0000 1111 0000 0000 0000 (4 bits = max value = 11) HEX = 0xf000
+		4. promoted piece 		0000 1111 0000 0000 0000 0000 (4 bits = max value = 11) HEX = 0xf0000
+		5. capture flag 		0001 0000 0000 0000 0000 0000 (1 bit) HEX = 0x100000
+		6. double push flag 	0010 0000 0000 0000 0000 0000 (1 bit) HEX = 0x200000
+		7. enpassant capture 	0100 0000 0000 0000 0000 0000 (1 bit) HEX = 0x400000
+		8. castling  flag 		1000 0000 0000 0000 0000 0000 (1 bit) HEX = 0x800000
+*/
 
 // storing moves
 var Moves []Bitboard
@@ -14,7 +26,7 @@ var Moves []Bitboard
 // main function to generate all PSUEDO LEGAL moves of a given position
 // MAKE_MOVE function will handle legality
 func GeneratePositionMoves() {
-	// reset stored moves
+	// reset moves
 	Moves = nil
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
@@ -22,50 +34,34 @@ func GeneratePositionMoves() {
 		if SideToMove == White {
 			switch i {
 			case WhitePawn:
-				fmt.Println("--- Gen white pawn moves ---")
 				genPawnMoves(White)
+				fmt.Println()
 			case WhiteKing:
-				fmt.Println("--- Gen white king moves ---")
-				genKingMoves(White)
-			case WhiteKnight:
-				fmt.Println("--- Gen white knight moves ---")
-				genKnightMoves(White)
-			case WhiteBishop:
-				fmt.Println("--- Gen white bishop moves ---")
-				genBishopMoves(White)
-			case WhiteRook:
-				fmt.Println("--- Gen white rook moves ---")
-				genRookMoves(White)
-			case WhiteQueen:
-				fmt.Println("--- Gen white queen moves ---")
-				genQueenMoves(White)
+				genSlidingPieceMoves(White, i)
+				genKingCastleMoves(White)
+				fmt.Println()
+			case WhiteBishop, WhiteRook, WhiteQueen, WhiteKnight:
+				genSlidingPieceMoves(White, i)
+				fmt.Println()
 			}
 		} else {
 			switch i {
 			case BlackPawn:
-				fmt.Println("--- Gen black pawn moves ---")
 				genPawnMoves(Black)
+				fmt.Println()
 			case BlackKing:
-				fmt.Println("--- Gen black king moves ---")
-				genKingMoves(Black)
-			case BlackKnight:
-				fmt.Println("--- Gen black knight moves ---")
-				genKnightMoves(Black)
-			case BlackBishop:
-				fmt.Println("--- Gen black bishop moves ---")
-				genBishopMoves(Black)
-			case BlackRook:
-				fmt.Println("--- Gen black rook moves ---")
-				genRookMoves(Black)
-			case BlackQueen:
-				fmt.Println("--- Gen black queen moves ---")
-				genQueenMoves(Black)
+				genSlidingPieceMoves(Black, i)
+				genKingCastleMoves(Black)
+				fmt.Println()
+			case BlackBishop, BlackRook, BlackQueen, BlackKnight:
+				genSlidingPieceMoves(Black, i)
+				fmt.Println()
 			}
 		}
 	}
 }
 
-// helper for pawn moves (REWRITE THIS TO MAKE IT SIMPLER)
+// helper for generating pawn moves
 func genPawnMoves(side int) {
 	// to -> from, aka: the move
 	var source, target int
@@ -84,13 +80,13 @@ func genPawnMoves(side int) {
 			if !(target < int(A8)) && GameOccupancy[Both].GetBit(target) == 0 {
 				// pawn promotion case
 				if source >= int(A7) && source <= int(H7) {
-					fmt.Println("promotion", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("WhitePawn promotion", IntSquareToString[source], IntSquareToString[target])
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("single", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("WhitePawn single push", IntSquareToString[source], IntSquareToString[target])
 					// pawn push two squares if on board and not occupied
 					if (source >= int(A2) && source <= int(H2)) && GameOccupancy[Both].GetBit(target-8) == 0 {
-						fmt.Println("double", IntSquareToString[source], IntSquareToString[target-8])
+						fmt.Println("WhitePawn double", IntSquareToString[source], IntSquareToString[target-8])
 					}
 				}
 			}
@@ -102,10 +98,10 @@ func genPawnMoves(side int) {
 				target = attacks.LSBIndex()
 				attacks.PopBit(target)
 				if source >= int(A7) && source <= int(H7) {
-					fmt.Println("pawn capture promotion", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("WhitePawn capture promotion", IntSquareToString[source], IntSquareToString[target])
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("pawn capture", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("WhitePawn capture", IntSquareToString[source], IntSquareToString[target])
 				}
 			}
 
@@ -116,7 +112,7 @@ func genPawnMoves(side int) {
 				if enpassant_attacks != 0 {
 					target_enpassant := enpassant_attacks.LSBIndex()
 					enpassant_attacks.PopBit(target_enpassant)
-					fmt.Println("pawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
+					fmt.Println("WhitePawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
 				}
 			}
 		}
@@ -133,13 +129,13 @@ func genPawnMoves(side int) {
 			if !(target > int(H1)) && GameOccupancy[Both].GetBit(target) == 0 {
 				// pawn promotion case
 				if source >= int(A2) && source <= int(H2) {
-					fmt.Println("promotion", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("BlackPawn promotion", IntSquareToString[source], IntSquareToString[target])
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("single", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("BlackPawn single push", IntSquareToString[source], IntSquareToString[target])
 					// pawn push two squares if on board and not occupied
 					if (source >= int(A7) && source <= int(H7)) && GameOccupancy[Both].GetBit(target+8) == 0 {
-						fmt.Println("double", IntSquareToString[source], IntSquareToString[target+8])
+						fmt.Println("BlackPawn double push", IntSquareToString[source], IntSquareToString[target+8])
 					}
 				}
 			}
@@ -150,10 +146,10 @@ func genPawnMoves(side int) {
 				target = attacks.LSBIndex()
 				attacks.PopBit(target)
 				if source >= int(A2) && source <= int(H2) {
-					fmt.Println("pawn capture promotion", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("BlackPawn capture promotion", IntSquareToString[source], IntSquareToString[target])
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("pawn capture", IntSquareToString[source], IntSquareToString[target])
+					fmt.Println("BlackPawn capture", IntSquareToString[source], IntSquareToString[target])
 				}
 			}
 			// enpssant captures
@@ -163,99 +159,95 @@ func genPawnMoves(side int) {
 				if enpassant_attacks != 0 {
 					target_enpassant := enpassant_attacks.LSBIndex()
 					enpassant_attacks.PopBit(target_enpassant)
-					fmt.Println("pawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
+					fmt.Println("BlackPawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
 				}
 			}
 		}
 	}
 }
 
-// helper for king moves
-func genKingMoves(side int) {
+// helper for generating king moves
+func genKingCastleMoves(side int) {
 	if side == White {
-		if Castle & White_king_side != 0 {
+		if Castle&White_king_side != 0 {
 			// make sure that the squares between king and the kings rook are empty
 			if GameOccupancy[Both].GetBit(int(F1)) == 0 && GameOccupancy[Both].GetBit(int(G1)) == 0 {
 				// first, make sure E1 and F1 are not under attack
 				if !IsSquareAttacked(int(E1), Black) && !IsSquareAttacked(int(F1), Black) {
-					fmt.Println("castling move king side... e1 g1")
+					fmt.Println("WhiteKing castling move king side... e1 g1")
 				}
 			}
 		}
 
-		if Castle & White_queen_side != 0 {
+		if Castle&White_queen_side != 0 {
 			// make sure that the squares between king and queens rook are empty
 			if GameOccupancy[Both].GetBit(int(B1)) == 0 && GameOccupancy[Both].GetBit(int(C1)) == 0 &&
 				GameOccupancy[Both].GetBit(int(D1)) == 0 {
 				// first, make sure that E1 and D1 are not under attack
 				if !IsSquareAttacked(int(E1), Black) && !IsSquareAttacked(int(D1), Black) {
-					fmt.Println("castling move queen side... e1 c1")
+					fmt.Println("WhiteKing castling move queen side... e1 c1")
 				}
 			}
 		}
 	} else {
-		if Castle & Black_king_side != 0 {
+		if Castle&Black_king_side != 0 {
 			// make sure that the squares between king and the kings rook are empty
 			if GameOccupancy[Both].GetBit(int(F8)) == 0 && GameOccupancy[Both].GetBit(int(G8)) == 0 {
 				// first, make sure E8 and F8 are not under attack
 				if !IsSquareAttacked(int(E8), White) && !IsSquareAttacked(int(F8), White) {
-					fmt.Println("castling move king side... e8 g8")
+					fmt.Println("BlackKing castling move king side... e8 g8")
 				}
 			}
 		}
 
-		if Castle & Black_queen_side != 0 {
+		if Castle&Black_queen_side != 0 {
 			// make sure that the squares between king and queens rook are empty
 			if GameOccupancy[Both].GetBit(int(B8)) == 0 && GameOccupancy[Both].GetBit(int(C8)) == 0 &&
 				GameOccupancy[Both].GetBit(int(D8)) == 0 {
 				// first, make sure E8 and F8 are not under attack
 				if !IsSquareAttacked(int(E8), White) && !IsSquareAttacked(int(D8), White) {
-					fmt.Println("castling move queen side... e8 c8")
+					fmt.Println("BlackKing castling move queen side... e8 c8")
 				}
 			}
 		}
 	}
 }
 
-/*
-	MAY END UP REWRITING THESE INTO ONE FUNCTION 
-	THAT CAN BE CUSTOMIZED FOR SLIDING PIECE
-*/
-// helper for knight moves
-func genKnightMoves(side int) {
-	// to -> from movement
-	var source, target int
-	// copy our current piece on the actual game board
-	var bitboard Bitboard
-	// set our copied bitboard
-	if side == White { bitboard = GameBoards[WhiteKnight] } else { bitboard = GameBoards[BlackKnight] }
-
+// helper for generating all sliding piece moves
+func genSlidingPieceMoves(side int, piece Piece) {
+	// current source squares for this piece
+	bitboard := GameBoards[piece]
+	// loop over all postions of this piece
 	for bitboard != 0 {
-		source = bitboard.LSBIndex(); bitboard.PopBit(source)
-		
+		source := bitboard.LSBIndex()
+		bitboard.PopBit(source)
+		// board to store target squares
+		var attacks Bitboard
+		// look up which piece that's needed, make sure it doesn't attack pieces of same color
+		switch piece {
+		case WhiteBishop, BlackBishop:
+			attacks = GetBishopAttack(source, GameOccupancy[Both]) & ^GameOccupancy[side]
+		case WhiteRook, BlackRook:
+			attacks = GetRookAttack(source, GameOccupancy[Both]) & ^GameOccupancy[side]
+		case WhiteQueen, BlackQueen:
+			attacks = GetQueenAttack(source, GameOccupancy[Both]) & ^GameOccupancy[side]
+		case WhiteKnight, BlackKnight:
+			attacks = KnightAttacks[source] & ^GameOccupancy[side]
+		case BlackKing, WhiteKing:
+			attacks = KingAttacks[source] & ^GameOccupancy[side]
+		}
+		// loop over all possible target squares
+		for attacks != 0 {
+			target := attacks.LSBIndex()
+			attacks.PopBit(target)
+			// quiet moves OR capture moves
+			if side == White && GameOccupancy[Black].GetBit(target) == 0 {
+				fmt.Println(IntToPieceName[piece], "quiet move", IntSquareToString[source], IntSquareToString[target])
+			} else if side == Black && GameOccupancy[White].GetBit(target) == 0 {
+				fmt.Println(IntToPieceName[piece], "quiet move", IntSquareToString[source], IntSquareToString[target])
+			} else {
+				fmt.Println(IntToPieceName[piece], "piece capture", IntSquareToString[source], IntSquareToString[target])
+			}
+		}
 	}
-}
-
-// helper for bishop moves 
-func genBishopMoves(side int) {
-	// to -> from movement
-	var source, target int
-	// copy our current piece on the actual game board
-	var bitboard Bitboard
-	// set our copied bitoard
-	if side == White { bitboard = GameBoards[WhiteBishop] } else { bitboard = GameBoards[BlackBishop] }
-
-	for bitboard != 0 {
-		source = bitboard.LSBIndex(); bitboard.PopBit(source)
-	}
-}
-
-// helper for rook moves
-func genRookMoves(side int) {
-
-}
-
-// helper for queen moves
-func genQueenMoves(side int) {
-
 }

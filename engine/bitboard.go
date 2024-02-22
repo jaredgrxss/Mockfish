@@ -58,6 +58,11 @@ var AsciiToType = map[string]Piece {
 	"p": BlackPawn, "n": BlackKnight, "b": BlackBishop, "r": BlackRook, "q": BlackQueen, "k": BlackKing,
 }
 
+var IntToPieceName = map[Piece]string {
+	0: "WhitePawn", 1: "WhiteKnight", 2: "WhiteBishop", 3: "WhiteRook", 4: "WhiteQueen", 5: "WhiteKing",
+	6: "BlackPawn", 7: "BlackKnight", 8: "BlackBishop", 9: "BlackRook", 10: "BlackQueen", 11: "BlackKing",
+}
+
 var StringSquareToBit = map[string]Square {
 	"a8": A8, "b8": B8, "c8": C8, "d8": D8, "e8": E8, "f8": F8, "g8": G8, "h8": H8,
 	"a7": A7, "b7": B7, "c7": C7, "d7": D7, "e7": E7, "f7": F7, "g7": G7, "h7": H7, 
