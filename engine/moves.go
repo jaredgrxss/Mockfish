@@ -10,24 +10,26 @@ import (
 /*
 	----- ENCODED DATA -----
 	Things needing to be encoded:
-		1. source square 		0000 0000 0000 0000 0011 1111 (6 bits = max square = 63) HEX = 0x3f
-		2. target square 		0000 0000 0000 1111 1100 0000 (6 bits = max square = 63) HEX = 0xfc0
-		3. piece type 			0000 0000 1111 0000 0000 0000 (4 bits = max value = 11) HEX = 0xf000
-		4. promoted piece 		0000 1111 0000 0000 0000 0000 (4 bits = max value = 11) HEX = 0xf0000
+		1. source square 		0000 0000 0000 0000 0011 1111 (6 bits / max square 63) HEX = 0x3f
+		2. target square 		0000 0000 0000 1111 1100 0000 (6 bits / max square 63) HEX = 0xfc0
+		3. piece type 			0000 0000 1111 0000 0000 0000 (4 bits / max value 11) HEX = 0xf000
+		4. promoted piece 		0000 1111 0000 0000 0000 0000 (4 bits / max value 11) HEX = 0xf0000
 		5. capture flag 		0001 0000 0000 0000 0000 0000 (1 bit) HEX = 0x100000
 		6. double push flag 	0010 0000 0000 0000 0000 0000 (1 bit) HEX = 0x200000
 		7. enpassant capture 	0100 0000 0000 0000 0000 0000 (1 bit) HEX = 0x400000
 		8. castling  flag 		1000 0000 0000 0000 0000 0000 (1 bit) HEX = 0x800000
 */
 
-// storing moves
-var Moves []Bitboard
+// define a Moves type
+type Moves []Bitboard
+
+// singleton for our moves in a game
+var MoveList Moves
 
 // main function to generate all PSUEDO LEGAL moves of a given position
-// MAKE_MOVE function will handle legality
 func GeneratePositionMoves() {
-	// reset moves
-	Moves = nil
+	// clear any moves from previous position
+	MoveList.clearMoveList()
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// generate based on side moving, and then piece
@@ -250,4 +252,24 @@ func genSlidingPieceMoves(side int, piece Piece) {
 			}
 		}
 	}
+}
+
+// function to add move by encoding
+func (moveList *Moves) addMove(move Bitboard) {
+	
+}
+
+// function to print move by decoding
+func (moveList Moves) printMove() {
+
+}
+
+// function to print entire move list for a given position
+func (moveList Moves) PrintMoveList() {
+
+}
+
+// fucntion to hard reset our moves list
+func (moveList *Moves) clearMoveList() {
+	*moveList = nil
 }
