@@ -28,5 +28,5 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 
 # Testing / Performance
-
+*Below I will try my best to update this brief overview of performance the engine develops at every level, seeing which techniques added the most elo boost and when*
 
