@@ -20,16 +20,21 @@ import (
 		8. castling  flag 		1000 0000 0000 0000 0000 0000 (1 bit) HEX = 0x800000
 */
 
-// define a Moves type
-type Moves []Bitboard
+type Moves struct {
+	move_list [256]int // big enough to store max legal moves in any pos
+	move_count int // to keep track of where to insert next move
+}
 
 // singleton for our moves in a game
-var MoveList Moves
+var MoveList Moves; 
+
 
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves() {
 	// clear any moves from previous position
-	MoveList.clearMoves()
+	MoveList.addMove(1)
+	MoveList.addMove(3)
+	fmt.Println(MoveList.move_count)
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// generate based on side moving, and then piece
@@ -244,18 +249,18 @@ func genSlidingPieceMoves(side int, piece Piece) {
 			attacks.PopBit(target)
 			// quiet moves OR capture moves
 			if side == White && GameOccupancy[Black].GetBit(target) == 0 {
-				fmt.Println(IntToPieceName[piece], "quiet move", IntSquareToString[source], IntSquareToString[target])
+				fmt.Println(IntToPieceName[int(piece)], "quiet move", IntSquareToString[source], IntSquareToString[target])
 			} else if side == Black && GameOccupancy[White].GetBit(target) == 0 {
-				fmt.Println(IntToPieceName[piece], "quiet move", IntSquareToString[source], IntSquareToString[target])
+				fmt.Println(IntToPieceName[int(piece)], "quiet move", IntSquareToString[source], IntSquareToString[target])
 			} else {
-				fmt.Println(IntToPieceName[piece], "piece capture", IntSquareToString[source], IntSquareToString[target])
+				fmt.Println(IntToPieceName[int(piece)], "piece capture", IntSquareToString[source], IntSquareToString[target])
 			}
 		}
 	}
 }
 
 // function to encode a move
-func EncodeMove(source, target, piece, promoted, capture, double, enpassant, castling int) int {
+func encodeMove(source, target, piece, promoted, capture, double, enpassant, castling int) int {
 	return source |
 		(target << 6) |
 		(piece << 12) |
@@ -266,7 +271,7 @@ func EncodeMove(source, target, piece, promoted, capture, double, enpassant, cas
 		(castling << 23)
 }
 
-func DecodeMove(encodedMove int) (source, target, piece, promoted, capture, double, enpassant, castling int) {
+func decodeMove(encodedMove int) (source, target, piece, promoted, capture, double, enpassant, castling int) {
 	return (encodedMove & 0x3f),
 		(encodedMove & 0xfc0) >> 6,
 		(encodedMove & 0xf000) >> 12,
@@ -278,21 +283,26 @@ func DecodeMove(encodedMove int) (source, target, piece, promoted, capture, doub
 }
 
 // function to add move by encoding
-func (moveList *Moves) addMove(move Bitboard) {
-
+func (moves *Moves) addMove(move int) {
+	moves.move_list[moves.move_count] = move
+	moves.move_count++
 }
 
 // function to print move by decoding
-func (moveList Moves) printMove() {
+func (moves Moves) printMove(move int) {
 
 }
 
-// function to print entire move list for a given position
-func (moveList Moves) PrintMoveList() {
-
+// function to print entire move list information for a given position
+func (moves Moves) PrintMoveList() {
+	// loop over move list and 
+	for i := 0; i < moves.move_count; i++ {
+		move := moves.move_list[i]
+		source, target, piece, promo, capture, double, enspassent, castle := decodeMove(move) 
+		fmt.Println("Move #", i + 1, ":", IntSquareToString[source], IntSquareToString[target],
+					IntToPieceName[piece], IntToPieceName[promo], 
+					capture, double, enspassent, castle)
+	}
 }
 
-// fucntion to hard reset our moves list
-func (moveList *Moves) clearMoves() {
-	*moveList = nil
-}
+

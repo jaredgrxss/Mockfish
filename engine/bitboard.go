@@ -46,8 +46,12 @@ const ( WhitePawn Piece = iota; WhiteKnight; WhiteBishop; WhiteRook; WhiteQueen;
 		BlackPawn; BlackKnight; BlackBishop; BlackRook; BlackQueen; BlackKing )
 
 // can use either ASCII or Unicode for board debugging
-var AsciiPieces string = "PNBRQKpnbrqk" // must be type casted with string()
+var AsciiPieces string = "PNBRQKpnbrqk" 
 
+// used for promotion, need them to all be lowercased for UCI
+var PromotedPieces string = "pnbrqkpnbrqk"
+
+// unicode pieces for board representation in console
 var UnicodePieces [12]string = [12]string {
 	"♙", "♘", "♗", "♖", "♕", "♔", 
 	"♟︎", "♞", "♝", "♜", "♛", "♚",
@@ -58,7 +62,7 @@ var AsciiToType = map[string]Piece {
 	"p": BlackPawn, "n": BlackKnight, "b": BlackBishop, "r": BlackRook, "q": BlackQueen, "k": BlackKing,
 }
 
-var IntToPieceName = map[Piece]string {
+var IntToPieceName = map[int]string {
 	0: "WhitePawn", 1: "WhiteKnight", 2: "WhiteBishop", 3: "WhiteRook", 4: "WhiteQueen", 5: "WhiteKing",
 	6: "BlackPawn", 7: "BlackKnight", 8: "BlackBishop", 9: "BlackRook", 10: "BlackQueen", 11: "BlackKing",
 }
