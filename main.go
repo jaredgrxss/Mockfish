@@ -10,4 +10,5 @@ func main() {
 	engine.PrintGameboard()
 	// testing move generation
 	engine.GeneratePositionMoves()
+
 }

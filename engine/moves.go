@@ -29,7 +29,7 @@ var MoveList Moves
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves() {
 	// clear any moves from previous position
-	MoveList.clearMoveList()
+	MoveList.clearMoves()
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// generate based on side moving, and then piece
@@ -254,9 +254,32 @@ func genSlidingPieceMoves(side int, piece Piece) {
 	}
 }
 
+// function to encode a move
+func EncodeMove(source, target, piece, promoted, capture, double, enpassant, castling int) int {
+	return source |
+		(target << 6) |
+		(piece << 12) |
+		(promoted << 16) |
+		(capture << 20) |
+		(double << 21) |
+		(enpassant << 22) |
+		(castling << 23)
+}
+
+func DecodeMove(encodedMove int) (source, target, piece, promoted, capture, double, enpassant, castling int) {
+	return (encodedMove & 0x3f),
+		(encodedMove & 0xfc0) >> 6,
+		(encodedMove & 0xf000) >> 12,
+		(encodedMove & 0xf0000) >> 16,
+		(encodedMove & 0x100000) >> 20,
+		(encodedMove & 0x200000) >> 21,
+		(encodedMove & 0x400000) >> 22,
+		(encodedMove & 0x800000) >> 23
+}
+
 // function to add move by encoding
 func (moveList *Moves) addMove(move Bitboard) {
-	
+
 }
 
 // function to print move by decoding
@@ -270,6 +293,6 @@ func (moveList Moves) PrintMoveList() {
 }
 
 // fucntion to hard reset our moves list
-func (moveList *Moves) clearMoveList() {
+func (moveList *Moves) clearMoves() {
 	*moveList = nil
 }
