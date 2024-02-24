@@ -21,20 +21,17 @@ import (
 */
 
 type Moves struct {
-	move_list [256]int // big enough to store max legal moves in any pos
-	move_count int // to keep track of where to insert next move
+	move_list  [256]int // big enough to store max legal moves in any pos
+	move_count int      // to keep track of where to insert next move
 }
 
 // singleton for our moves in a game
-var MoveList Moves; 
-
+var MoveList Moves
 
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves() {
 	// clear any moves from previous position
-	MoveList.addMove(1)
-	MoveList.addMove(3)
-	fmt.Println(MoveList.move_count)
+	MoveList.clearMoveList()
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// generate based on side moving, and then piece
@@ -88,12 +85,18 @@ func genPawnMoves(side int) {
 				// pawn promotion case
 				if source >= int(A7) && source <= int(H7) {
 					fmt.Println("WhitePawn promotion", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteQueen), 0, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteRook), 0, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteKnight), 0, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteBishop), 0, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
 					fmt.Println("WhitePawn single push", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), 0, 0, 0, 0, 0))
 					// pawn push two squares if on board and not occupied
 					if (source >= int(A2) && source <= int(H2)) && GameOccupancy[Both].GetBit(target-8) == 0 {
 						fmt.Println("WhitePawn double", IntSquareToString[source], IntSquareToString[target-8])
+						MoveList.addMove(encodeMove(source, target-8, int(WhitePawn), 0, 0, 1, 0, 0))
 					}
 				}
 			}
@@ -106,9 +109,14 @@ func genPawnMoves(side int) {
 				attacks.PopBit(target)
 				if source >= int(A7) && source <= int(H7) {
 					fmt.Println("WhitePawn capture promotion", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteQueen), 1, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteRook), 1, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteBishop), 1, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteKnight), 1, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
 					fmt.Println("WhitePawn capture", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(WhitePawn), 0, 1, 0, 0, 0))
 				}
 			}
 
@@ -120,6 +128,8 @@ func genPawnMoves(side int) {
 					target_enpassant := enpassant_attacks.LSBIndex()
 					enpassant_attacks.PopBit(target_enpassant)
 					fmt.Println("WhitePawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
+					MoveList.addMove(encodeMove(source, target_enpassant, int(WhitePawn), 0, 1, 0, 1, 0))
+
 				}
 			}
 		}
@@ -137,12 +147,18 @@ func genPawnMoves(side int) {
 				// pawn promotion case
 				if source >= int(A2) && source <= int(H2) {
 					fmt.Println("BlackPawn promotion", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackQueen), 0, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackRook), 0, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackKnight), 0, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackBishop), 0, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
 					fmt.Println("BlackPawn single push", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), 0, 0, 0, 0, 0))
 					// pawn push two squares if on board and not occupied
 					if (source >= int(A7) && source <= int(H7)) && GameOccupancy[Both].GetBit(target+8) == 0 {
 						fmt.Println("BlackPawn double push", IntSquareToString[source], IntSquareToString[target+8])
+						MoveList.addMove(encodeMove(source, target+8, int(BlackPawn), 0, 0, 1, 0, 0))
 					}
 				}
 			}
@@ -154,9 +170,14 @@ func genPawnMoves(side int) {
 				attacks.PopBit(target)
 				if source >= int(A2) && source <= int(H2) {
 					fmt.Println("BlackPawn capture promotion", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackQueen), 1, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackRook), 1, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackBishop), 1, 0, 0, 0))
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackKnight), 1, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
 					fmt.Println("BlackPawn capture", IntSquareToString[source], IntSquareToString[target])
+					MoveList.addMove(encodeMove(source, target, int(BlackPawn), 0, 1, 0, 0, 0))
 				}
 			}
 			// enpssant captures
@@ -167,6 +188,7 @@ func genPawnMoves(side int) {
 					target_enpassant := enpassant_attacks.LSBIndex()
 					enpassant_attacks.PopBit(target_enpassant)
 					fmt.Println("BlackPawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
+					MoveList.addMove(encodeMove(source, target_enpassant, int(BlackPawn), 0, 1, 0, 1, 0))
 				}
 			}
 		}
@@ -259,7 +281,7 @@ func genSlidingPieceMoves(side int, piece Piece) {
 	}
 }
 
-// function to encode a move
+// function to encode all possible information about a potential move, used by search function
 func encodeMove(source, target, piece, promoted, capture, double, enpassant, castling int) int {
 	return source |
 		(target << 6) |
@@ -271,6 +293,7 @@ func encodeMove(source, target, piece, promoted, capture, double, enpassant, cas
 		(castling << 23)
 }
 
+// decode a encoded move with the schema mentioned above, only 24 bits of a 32 bit int are used
 func decodeMove(encodedMove int) (source, target, piece, promoted, capture, double, enpassant, castling int) {
 	return (encodedMove & 0x3f),
 		(encodedMove & 0xfc0) >> 6,
@@ -282,27 +305,41 @@ func decodeMove(encodedMove int) (source, target, piece, promoted, capture, doub
 		(encodedMove & 0x800000) >> 23
 }
 
-// function to add move by encoding
+// function to add move after it has already been encoded
 func (moves *Moves) addMove(move int) {
 	moves.move_list[moves.move_count] = move
 	moves.move_count++
 }
 
-// function to print move by decoding
+// function to print move after decoding
 func (moves Moves) printMove(move int) {
-
+	source, target, piece, promo, capture, double, enpassant, castling := decodeMove(move)
+	if promo == 0 { 
+		fmt.Printf("move	  piece	     capture	 double	 enpassant	castling\n")
+		fmt.Println("         ", IntSquareToString[source]+IntSquareToString[target],
+			"  ", IntToPieceName[piece], "    ", capture, "       ", double,
+			"        ", enpassant, "          ", castling)
+	} else {
+		fmt.Printf("move	  piece	     capture	 double	 enpassant	castling\n")
+		fmt.Println("         ", IntSquareToString[source]+IntSquareToString[target]+string(PromotedPieces[promo]),
+			" ", IntToPieceName[piece], "    ", capture, "       ", double,
+			"        ", enpassant, "          ", castling)
+	}
 }
 
 // function to print entire move list information for a given position
 func (moves Moves) PrintMoveList() {
-	// loop over move list and 
+	if moves.move_count == 0 {
+		fmt.Println("No moves generated for the current position...")
+		return
+	}
+	// loop over move list and print each
 	for i := 0; i < moves.move_count; i++ {
-		move := moves.move_list[i]
-		source, target, piece, promo, capture, double, enspassent, castle := decodeMove(move) 
-		fmt.Println("Move #", i + 1, ":", IntSquareToString[source], IntSquareToString[target],
-					IntToPieceName[piece], IntToPieceName[promo], 
-					capture, double, enspassent, castle)
+		fmt.Print("Move #", i + 1, "   ")
+		moves.printMove(moves.move_list[i])
 	}
 }
 
-
+func (moves *Moves) clearMoveList() {
+	moves.move_list = [256]int{}; moves.move_count = 0
+}
