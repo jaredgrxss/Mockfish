@@ -2,31 +2,28 @@ package engine
 
 import (
 	"fmt"
+	"bufio"
+	"os"
 )
 
 /****************************************
 	HELPERS RELATED TO MOVE GENERATION
 ****************************************/
-/*
-	----- ENCODED DATA -----
-	Things needing to be encoded:
-		1. source square 		0000 0000 0000 0000 0011 1111 (6 bits / max square 63) HEX = 0x3f
-		2. target square 		0000 0000 0000 1111 1100 0000 (6 bits / max square 63) HEX = 0xfc0
-		3. piece type 			0000 0000 1111 0000 0000 0000 (4 bits / max value 11) HEX = 0xf000
-		4. promoted piece 		0000 1111 0000 0000 0000 0000 (4 bits / max value 11) HEX = 0xf0000
-		5. capture flag 		0001 0000 0000 0000 0000 0000 (1 bit) HEX = 0x100000
-		6. double push flag 	0010 0000 0000 0000 0000 0000 (1 bit) HEX = 0x200000
-		7. enpassant capture 	0100 0000 0000 0000 0000 0000 (1 bit) HEX = 0x400000
-		8. castling  flag 		1000 0000 0000 0000 0000 0000 (1 bit) HEX = 0x800000
-*/
 
 type Moves struct {
 	move_list  [256]int // big enough to store max legal moves in any pos
 	move_count int      // to keep track of where to insert next move
 }
 
+const ( allMoves = iota; onlyCaptures)
+
 // singleton for our moves in a game
 var MoveList Moves
+
+// used for our COPY / MAKE approach 
+var GameBoards_Copy [12]Bitboard 
+var GameOccupancy_Copy [3]Bitboard
+var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
 
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves() {
@@ -39,27 +36,21 @@ func GeneratePositionMoves() {
 			switch i {
 			case WhitePawn:
 				genPawnMoves(White)
-				fmt.Println()
 			case WhiteKing:
 				genSlidingPieceMoves(White, i)
 				genKingCastleMoves(White)
-				fmt.Println()
 			case WhiteBishop, WhiteRook, WhiteQueen, WhiteKnight:
 				genSlidingPieceMoves(White, i)
-				fmt.Println()
 			}
 		} else {
 			switch i {
 			case BlackPawn:
 				genPawnMoves(Black)
-				fmt.Println()
 			case BlackKing:
 				genSlidingPieceMoves(Black, i)
 				genKingCastleMoves(Black)
-				fmt.Println()
 			case BlackBishop, BlackRook, BlackQueen, BlackKnight:
 				genSlidingPieceMoves(Black, i)
-				fmt.Println()
 			}
 		}
 	}
@@ -183,7 +174,7 @@ func genPawnMoves(side int) {
 	}
 }
 
-// helper for generating king moves
+// helper for generating king castling moves
 func genKingCastleMoves(side int) {
 	if side == White {
 		if Castle&White_king_side != 0 {
@@ -269,7 +260,20 @@ func genSlidingPieceMoves(side int, piece Piece) {
 	}
 }
 
-// function to encode all possible information about a potential move, used by search function
+/***************************************************************************************************************
+									----- ENCODED DATA -----
+		 Things encoded: 							Offset / Schema:
+		1. source square 		0000 0000 0000 0000 0011 1111 (6 bits / max square 63) HEX_OFFSET = 0x3f
+		2. target square 		0000 0000 0000 1111 1100 0000 (6 bits / max square 63) HEX_OFFSET = 0xfc0
+		3. piece type 			0000 0000 1111 0000 0000 0000 (4 bits / max value 11) HEX_OFFSET = 0xf000
+		4. promoted piece 		0000 1111 0000 0000 0000 0000 (4 bits / max value 11) HEX_OFFSET = 0xf0000
+		5. capture flag 		0001 0000 0000 0000 0000 0000 (1 bit) HEX_OFFSET = 0x100000
+		6. double push flag 	0010 0000 0000 0000 0000 0000 (1 bit) HEX_OFFSET = 0x200000
+		7. enpassant capture 	0100 0000 0000 0000 0000 0000 (1 bit) HEX_OFFSET = 0x400000
+		8. castling  flag 		1000 0000 0000 0000 0000 0000 (1 bit) HEX_OFFSET = 0x800000
+***************************************************************************************************************/
+
+// encode all possible information about a potential move with offsets, used by search function
 func encodeMove(source, target, piece, promoted, capture, double, enpassant, castling int) int {
 	return source |
 		(target << 6) |
@@ -293,13 +297,13 @@ func decodeMove(encodedMove int) (source, target, piece, promoted, capture, doub
 		(encodedMove & 0x800000) >> 23
 }
 
-// function to add move after it has already been encoded
+// add a move to the movelist after it has already been encoded
 func (moves *Moves) addMove(move int) {
 	moves.move_list[moves.move_count] = move
 	moves.move_count++
 }
 
-// function to print move after decoding
+// print a single move after decoding
 func (moves Moves) printMove(move int) {
 	source, target, piece, promo, capture, double, enpassant, castling := decodeMove(move)
 	if promo == 0 { 
@@ -316,7 +320,7 @@ func (moves Moves) printMove(move int) {
 	fmt.Println()
 }
 
-// function to print entire move list information for a given position
+// print entire move list information for a given position
 func (moves Moves) PrintMoveList() {
 	if moves.move_count == 0 {
 		fmt.Println("No moves generated for the current position...")
@@ -329,6 +333,107 @@ func (moves Moves) PrintMoveList() {
 	}
 }
 
+// clear all moves from our singleton movelist
 func (moves *Moves) clearMoveList() {
 	moves.move_list = [256]int{}; moves.move_count = 0
+}
+
+// copy game state
+func COPY() {
+	GameBoards_Copy = GameBoards
+	GameOccupancy_Copy = GameOccupancy
+	SideToMove_Copy = SideToMove
+	Enpassant_Copy = Enpassant
+	Castle_Copy = Castle
+}
+
+// restore previous game state
+func RESTORE() {
+	GameBoards = GameBoards_Copy
+	GameOccupancy = GameOccupancy_Copy
+	SideToMove = SideToMove_Copy
+	Enpassant = Enpassant_Copy
+	Castle = Castle_Copy
+}
+
+// main make move function 
+func MakeMove(move int, move_flag int) int {
+	// parse the move
+	source, target, piece, promo, capture, _, _, _ := decodeMove(move)
+	// distinguish between quiet / capture moves
+	if move_flag == allMoves {
+		// preserve the board state
+		COPY()
+
+		// move the piece
+		GameBoards[piece].PopBit(source)
+		GameBoards[piece].SetBit(target)
+
+		// need to handle if this move is a capture
+		if capture == 1 {
+			handleCaptureMove(target)
+		}
+
+		// handle promotions
+		if promo == 1 {
+			handlePawnPromotions(target, promo)
+		}
+		
+	} else {
+		if capture == 1 {
+			MakeMove(move, allMoves)
+		}
+		return 0
+	}
+	return 0
+}
+
+// captures made on the board
+func handleCaptureMove(target int) {
+	var startPiece, endPiece Piece 
+	// have to loop over opposite sides boards for captures
+	if SideToMove == White {
+		startPiece = BlackPawn;
+		endPiece = BlackKing;
+	} else {
+		startPiece = WhitePawn;
+		endPiece = WhiteKing
+	}
+	// find which bitboard has the piece being capture
+	for i := startPiece; i <= endPiece; i++ {
+		if GameBoards[i].GetBit(target) == 1 {
+			GameBoards[i].PopBit(target)
+			break
+		}
+	}
+}
+
+func handlePawnPromotions(target int, promo int) {
+	// erase pawn from target square
+	if SideToMove == White {
+		GameBoards[WhitePawn].PopBit(target)
+	} else {
+		GameBoards[BlackPawn].PopBit(target)
+	}
+
+	// add a promoted piece to the target square
+	GameBoards[promo].SetBit(target)
+
+}
+
+
+func TestMakeMove() {
+	GeneratePositionMoves()
+	for i := 0; i < MoveList.move_count; i++ {
+		move := MoveList.move_list[i]
+		COPY()
+		PrintGameboard()
+		fmt.Print("Move #", i + 1, "   ")
+		MoveList.printMove(move)
+		MakeMove(move, 0)
+		PrintGameboard()
+		RESTORE()
+		buf := bufio.NewReader(os.Stdin)
+		buf.ReadBytes('\n')
+	}
 }
