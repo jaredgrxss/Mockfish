@@ -84,18 +84,15 @@ func genPawnMoves(side int) {
 			if !(target < int(A8)) && GameOccupancy[Both].GetBit(target) == 0 {
 				// pawn promotion case
 				if source >= int(A7) && source <= int(H7) {
-					fmt.Println("WhitePawn promotion", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteQueen), 0, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteRook), 0, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteKnight), 0, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteBishop), 0, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("WhitePawn single push", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), 0, 0, 0, 0, 0))
 					// pawn push two squares if on board and not occupied
 					if (source >= int(A2) && source <= int(H2)) && GameOccupancy[Both].GetBit(target-8) == 0 {
-						fmt.Println("WhitePawn double", IntSquareToString[source], IntSquareToString[target-8])
 						MoveList.addMove(encodeMove(source, target-8, int(WhitePawn), 0, 0, 1, 0, 0))
 					}
 				}
@@ -108,14 +105,12 @@ func genPawnMoves(side int) {
 				target = attacks.LSBIndex()
 				attacks.PopBit(target)
 				if source >= int(A7) && source <= int(H7) {
-					fmt.Println("WhitePawn capture promotion", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteQueen), 1, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteRook), 1, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteBishop), 1, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), int(WhiteKnight), 1, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("WhitePawn capture", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(WhitePawn), 0, 1, 0, 0, 0))
 				}
 			}
@@ -127,7 +122,6 @@ func genPawnMoves(side int) {
 				if enpassant_attacks != 0 {
 					target_enpassant := enpassant_attacks.LSBIndex()
 					enpassant_attacks.PopBit(target_enpassant)
-					fmt.Println("WhitePawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
 					MoveList.addMove(encodeMove(source, target_enpassant, int(WhitePawn), 0, 1, 0, 1, 0))
 
 				}
@@ -146,18 +140,15 @@ func genPawnMoves(side int) {
 			if !(target > int(H1)) && GameOccupancy[Both].GetBit(target) == 0 {
 				// pawn promotion case
 				if source >= int(A2) && source <= int(H2) {
-					fmt.Println("BlackPawn promotion", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackQueen), 0, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackRook), 0, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackKnight), 0, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackBishop), 0, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("BlackPawn single push", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), 0, 0, 0, 0, 0))
 					// pawn push two squares if on board and not occupied
 					if (source >= int(A7) && source <= int(H7)) && GameOccupancy[Both].GetBit(target+8) == 0 {
-						fmt.Println("BlackPawn double push", IntSquareToString[source], IntSquareToString[target+8])
 						MoveList.addMove(encodeMove(source, target+8, int(BlackPawn), 0, 0, 1, 0, 0))
 					}
 				}
@@ -169,14 +160,12 @@ func genPawnMoves(side int) {
 				target = attacks.LSBIndex()
 				attacks.PopBit(target)
 				if source >= int(A2) && source <= int(H2) {
-					fmt.Println("BlackPawn capture promotion", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackQueen), 1, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackRook), 1, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackBishop), 1, 0, 0, 0))
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), int(BlackKnight), 1, 0, 0, 0))
 				} else {
 					// pawn push one square, already checked that is on board
-					fmt.Println("BlackPawn capture", IntSquareToString[source], IntSquareToString[target])
 					MoveList.addMove(encodeMove(source, target, int(BlackPawn), 0, 1, 0, 0, 0))
 				}
 			}
@@ -187,7 +176,6 @@ func genPawnMoves(side int) {
 				if enpassant_attacks != 0 {
 					target_enpassant := enpassant_attacks.LSBIndex()
 					enpassant_attacks.PopBit(target_enpassant)
-					fmt.Println("BlackPawn enpassant capture", IntSquareToString[source], IntSquareToString[target_enpassant])
 					MoveList.addMove(encodeMove(source, target_enpassant, int(BlackPawn), 0, 1, 0, 1, 0))
 				}
 			}
@@ -203,7 +191,7 @@ func genKingCastleMoves(side int) {
 			if GameOccupancy[Both].GetBit(int(F1)) == 0 && GameOccupancy[Both].GetBit(int(G1)) == 0 {
 				// first, make sure E1 and F1 are not under attack
 				if !IsSquareAttacked(int(E1), Black) && !IsSquareAttacked(int(F1), Black) {
-					fmt.Println("WhiteKing castling move king side... e1 g1")
+					MoveList.addMove(encodeMove(int(E1), int(G1), int(WhiteKing), 0, 0, 0, 0, 1))
 				}
 			}
 		}
@@ -214,7 +202,7 @@ func genKingCastleMoves(side int) {
 				GameOccupancy[Both].GetBit(int(D1)) == 0 {
 				// first, make sure that E1 and D1 are not under attack
 				if !IsSquareAttacked(int(E1), Black) && !IsSquareAttacked(int(D1), Black) {
-					fmt.Println("WhiteKing castling move queen side... e1 c1")
+					MoveList.addMove(encodeMove(int(E1), int(C1), int(WhiteKing), 0, 0, 0, 0, 1))
 				}
 			}
 		}
@@ -224,7 +212,7 @@ func genKingCastleMoves(side int) {
 			if GameOccupancy[Both].GetBit(int(F8)) == 0 && GameOccupancy[Both].GetBit(int(G8)) == 0 {
 				// first, make sure E8 and F8 are not under attack
 				if !IsSquareAttacked(int(E8), White) && !IsSquareAttacked(int(F8), White) {
-					fmt.Println("BlackKing castling move king side... e8 g8")
+					MoveList.addMove(encodeMove(int(E8), int(G8), int(BlackKing), 0, 0, 0, 0, 1))
 				}
 			}
 		}
@@ -235,7 +223,7 @@ func genKingCastleMoves(side int) {
 				GameOccupancy[Both].GetBit(int(D8)) == 0 {
 				// first, make sure E8 and F8 are not under attack
 				if !IsSquareAttacked(int(E8), White) && !IsSquareAttacked(int(D8), White) {
-					fmt.Println("BlackKing castling move queen side... e8 c8")
+					MoveList.addMove(encodeMove(int(E8), int(C8), int(BlackKing), 0, 0, 0, 0, 1))
 				}
 			}
 		}
@@ -271,11 +259,11 @@ func genSlidingPieceMoves(side int, piece Piece) {
 			attacks.PopBit(target)
 			// quiet moves OR capture moves
 			if side == White && GameOccupancy[Black].GetBit(target) == 0 {
-				fmt.Println(IntToPieceName[int(piece)], "quiet move", IntSquareToString[source], IntSquareToString[target])
+				MoveList.addMove(encodeMove(int(source), int(target), int(piece), 0, 0, 0, 0, 0))
 			} else if side == Black && GameOccupancy[White].GetBit(target) == 0 {
-				fmt.Println(IntToPieceName[int(piece)], "quiet move", IntSquareToString[source], IntSquareToString[target])
+				MoveList.addMove(encodeMove(int(source), int(target), int(piece), 0, 0, 0, 0, 0))
 			} else {
-				fmt.Println(IntToPieceName[int(piece)], "piece capture", IntSquareToString[source], IntSquareToString[target])
+				MoveList.addMove(encodeMove(int(source), int(target), int(piece), 0, 1, 0, 0, 0))
 			}
 		}
 	}
@@ -325,6 +313,7 @@ func (moves Moves) printMove(move int) {
 			" ", IntToPieceName[piece], "    ", capture, "       ", double,
 			"        ", enpassant, "          ", castling)
 	}
+	fmt.Println()
 }
 
 // function to print entire move list information for a given position
