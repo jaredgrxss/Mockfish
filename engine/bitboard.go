@@ -37,6 +37,31 @@ var Enpassant int = 64
 var Castle int
 const White_king_side, White_queen_side, Black_king_side, Black_queen_side = 1, 2, 4, 8
 
+/*
+	castling updating constants 
+								move					in 			in
+								update:					binary:		decimal:
+	king & rooks didn't move:	1111 & 1111 	= 		1111		15
+	white king moved: 			1111 & 1110 	= 		1100		12
+	white king's rook moved: 	1111 & 1110		= 		1110		14
+	white queen's rook moved: 	1111 & 1101		= 		1101		13
+
+	black king moved: 			1111 & 0011		= 		1011		3
+	black king's rook moved: 	1111 & 1011		=		1011		11
+	black queen's rook moved: 	1111 & 0111		=		0111		7
+*/
+
+var CastlingRightsHelper = [64]int {
+	7, 14, 15, 15, 3, 15, 15, 11,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	13, 15, 15, 15, 12, 15, 15, 14,
+}
+
 /******************************
 		ENUMERATIONS
 ******************************/
@@ -204,7 +229,7 @@ func (bitboard Bitboard) PrintBitboard() {
 
 	// enpassant printed
 	if (Enpassant != 64) {
-		fmt.Println("    Enpassant: ", Enpassant)
+		fmt.Println("    Enpassant: ", IntSquareToString[Enpassant])
 	} else {
 		fmt.Println("    Enpassant: NO")
 	}

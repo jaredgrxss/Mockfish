@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"fmt"
 	"bufio"
+	"fmt"
 	"os"
 )
 
@@ -15,13 +15,16 @@ type Moves struct {
 	move_count int      // to keep track of where to insert next move
 }
 
-const ( allMoves = iota; onlyCaptures)
+const (
+	allMoves = iota
+	onlyCaptures
+)
 
 // singleton for our moves in a game
 var MoveList Moves
 
-// used for our COPY / MAKE approach 
-var GameBoards_Copy [12]Bitboard 
+// used for our COPY / MAKE approach
+var GameBoards_Copy [12]Bitboard
 var GameOccupancy_Copy [3]Bitboard
 var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
 
@@ -306,7 +309,7 @@ func (moves *Moves) addMove(move int) {
 // print a single move after decoding
 func (moves Moves) printMove(move int) {
 	source, target, piece, promo, capture, double, enpassant, castling := decodeMove(move)
-	if promo == 0 { 
+	if promo == 0 {
 		fmt.Printf("move	  piece	     capture	 double	 enpassant	castling\n")
 		fmt.Println("         ", IntSquareToString[source]+IntSquareToString[target],
 			"  ", IntToPieceName[piece], "    ", capture, "       ", double,
@@ -328,14 +331,15 @@ func (moves Moves) PrintMoveList() {
 	}
 	// loop over move list and print each
 	for i := 0; i < moves.move_count; i++ {
-		fmt.Print("Move #", i + 1, "   ")
+		fmt.Print("Move #", i+1, "   ")
 		moves.printMove(moves.move_list[i])
 	}
 }
 
 // clear all moves from our singleton movelist
 func (moves *Moves) clearMoveList() {
-	moves.move_list = [256]int{}; moves.move_count = 0
+	moves.move_list = [256]int{}
+	moves.move_count = 0
 }
 
 // copy game state
@@ -356,29 +360,53 @@ func RESTORE() {
 	Castle = Castle_Copy
 }
 
-// main make move function 
+// main make move function
 func MakeMove(move int, move_flag int) int {
-	// parse the move
-	source, target, piece, promo, capture, _, _, _ := decodeMove(move)
+	// parse the move information
+	source, target, piece, promo, capture, double, enpassant, castling := decodeMove(move)
 	// distinguish between quiet / capture moves
 	if move_flag == allMoves {
 		// preserve the board state
 		COPY()
 
-		// move the piece
+		// perform the move
 		GameBoards[piece].PopBit(source)
 		GameBoards[piece].SetBit(target)
 
-		// need to handle if this move is a capture
+		// handle if move was a capture
 		if capture == 1 {
 			handleCaptureMove(target)
 		}
 
-		// handle promotions
-		if promo == 1 {
+		// handle if move was a promotion
+		if promo > 0 {
 			handlePawnPromotions(target, promo)
 		}
-		
+
+		// handle if move was an enpassant move
+		if enpassant == 1 {
+			handleEnpassantMove(target)
+		}
+
+		// reset enpassant if it is not chosen as a move
+		Enpassant = 64
+
+		// handle if move was a double pawn push
+		if double == 1 {
+			handleDoublePawnPush(target)
+		}
+
+		// handle if move was a castling move
+		if castling == 1 {
+			handleCastlingMove(target)
+		}
+
+		// update castling rights every move
+		updateCastlingRights(source, target)
+
+		// update occupancy boards with every move
+		updateOccupancyBoard()
+
 	} else {
 		if capture == 1 {
 			MakeMove(move, allMoves)
@@ -390,13 +418,13 @@ func MakeMove(move int, move_flag int) int {
 
 // captures made on the board
 func handleCaptureMove(target int) {
-	var startPiece, endPiece Piece 
+	var startPiece, endPiece Piece
 	// have to loop over opposite sides boards for captures
 	if SideToMove == White {
-		startPiece = BlackPawn;
-		endPiece = BlackKing;
+		startPiece = BlackPawn
+		endPiece = BlackKing
 	} else {
-		startPiece = WhitePawn;
+		startPiece = WhitePawn
 		endPiece = WhiteKing
 	}
 	// find which bitboard has the piece being capture
@@ -408,6 +436,7 @@ func handleCaptureMove(target int) {
 	}
 }
 
+// promotions made on the board
 func handlePawnPromotions(target int, promo int) {
 	// erase pawn from target square
 	if SideToMove == White {
@@ -415,23 +444,89 @@ func handlePawnPromotions(target int, promo int) {
 	} else {
 		GameBoards[BlackPawn].PopBit(target)
 	}
-
 	// add a promoted piece to the target square
 	GameBoards[promo].SetBit(target)
-
 }
 
+// enpassent captures made on the board
+func handleEnpassantMove(target int) {
+	// need to remove captured piece from the board
+	if SideToMove == White {
+		GameBoards[BlackPawn].PopBit(target + 8)
+	} else {
+		GameBoards[WhitePawn].PopBit(target - 8)
+	}
+}
+
+// a double pawn push was made on the board
+func handleDoublePawnPush(target int) {
+	if SideToMove == White {
+		Enpassant = target + 8
+	} else {
+		Enpassant = target - 8
+	}
+}
+
+// a castling move was made on the board, need to update rook
+func handleCastlingMove(target int) {
+	switch target {
+	// white castle king side, move H rook
+	case int(G1):
+		GameBoards[WhiteRook].PopBit(int(H1))
+		GameBoards[WhiteRook].SetBit(int(F1))
+		// white castle queen side, move A rook
+	case int(C1):
+		GameBoards[WhiteRook].PopBit(int(A1))
+		GameBoards[WhiteRook].SetBit(int(D1))
+		// black castle king side, move H rook
+	case int(G8):
+		GameBoards[BlackRook].PopBit(int(H8))
+		GameBoards[BlackRook].SetBit(int(F8))
+		// black castle queen side, move A rook
+	case int(C8):
+		GameBoards[WhiteRook].PopBit(int(A8))
+		GameBoards[WhiteRook].SetBit(int(D8))
+	}
+}
+
+func updateCastlingRights(source int, target int) {
+	Castle &= CastlingRightsHelper[source]
+	Castle &= CastlingRightsHelper[target]
+}
+
+func updateOccupancyBoard() {
+	// reset the boards
+	for i := 0; i < 3; i++ {
+		GameOccupancy[i] = 0
+	}
+
+	// update white
+	for i := WhitePawn; i <= WhiteKing; i++ {
+		GameOccupancy[White] |= GameBoards[i]
+	}
+
+	// update black
+	for i := BlackPawn; i <= BlackKing; i++ {
+		GameOccupancy[Black] |= GameBoards[i]
+	}
+
+	// update both
+	GameOccupancy[Both] |= GameOccupancy[White]
+	GameOccupancy[Both] |= GameOccupancy[Black]
+}
 
 func TestMakeMove() {
 	GeneratePositionMoves()
 	for i := 0; i < MoveList.move_count; i++ {
 		move := MoveList.move_list[i]
 		COPY()
-		PrintGameboard()
-		fmt.Print("Move #", i + 1, "   ")
+		//PrintGameboard()
+		GameOccupancy[Both].PrintBitboard()
+		fmt.Print("Move #", i+1, "   ")
 		MoveList.printMove(move)
 		MakeMove(move, 0)
-		PrintGameboard()
+		GameOccupancy[Both].PrintBitboard()
+		//PrintGameboard()
 		RESTORE()
 		buf := bufio.NewReader(os.Stdin)
 		buf.ReadBytes('\n')
