@@ -31,7 +31,7 @@ var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves() {
 	// clear any moves from previous position
-	MoveList.clearMoveList()
+	MoveList.move_count = 0
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// generate based on side moving, and then piece
@@ -289,7 +289,7 @@ func encodeMove(source, target, piece, promoted, capture, double, enpassant, cas
 }
 
 // decode a encoded move with the schema mentioned above, only 24 bits of a 32 bit int are used
-func decodeMove(encodedMove int) (source, target, piece, promoted, capture, double, enpassant, castling int) {
+func DecodeMove(encodedMove int) (source, target, piece, promoted, capture, double, enpassant, castling int) {
 	return (encodedMove & 0x3f),
 		(encodedMove & 0xfc0) >> 6,
 		(encodedMove & 0xf000) >> 12,
@@ -308,7 +308,7 @@ func (moves *Moves) addMove(move int) {
 
 // print a single move after decoding
 func (moves Moves) printMove(move int) {
-	source, target, piece, promo, capture, double, enpassant, castling := decodeMove(move)
+	source, target, piece, promo, capture, double, enpassant, castling := DecodeMove(move)
 	if promo == 0 {
 		fmt.Printf("move	  piece	     capture	 double	 enpassant	castling\n")
 		fmt.Println("         ", IntSquareToString[source]+IntSquareToString[target],
@@ -336,12 +336,6 @@ func (moves Moves) PrintMoveList() {
 	}
 }
 
-// clear all moves from our singleton movelist
-func (moves *Moves) clearMoveList() {
-	moves.move_list = [256]int{}
-	moves.move_count = 0
-}
-
 // copy game state
 func COPY() {
 	GameBoards_Copy = GameBoards
@@ -363,7 +357,7 @@ func RESTORE() {
 // main make move function
 func MakeMove(move int, move_flag int) int {
 	// parse the move information
-	source, target, piece, promo, capture, double, enpassant, castling := decodeMove(move)
+	source, target, piece, promo, capture, double, enpassant, castling := DecodeMove(move)
 	// distinguish between quiet / capture moves
 	if move_flag == allMoves {
 		// preserve the board state
@@ -407,13 +401,31 @@ func MakeMove(move int, move_flag int) int {
 		// update occupancy boards with every move
 		updateOccupancyBoard()
 
+		// change side 
+		SideToMove ^= 1
+
+		// check to see if check was put in check from move
+		if SideToMove == White {
+			if IsSquareAttacked(GameBoards[BlackKing].LSBIndex(), SideToMove) {
+				RESTORE()
+				return 0
+			}
+		} else {
+			if IsSquareAttacked(GameBoards[WhiteKing].LSBIndex(), SideToMove) {
+				RESTORE()
+				return 0
+			}
+		}
+		
+		// this was a legal move
+		return 1
 	} else {
 		if capture == 1 {
 			MakeMove(move, allMoves)
-		}
+		} 
+		// don't make this move
 		return 0
 	}
-	return 0
 }
 
 // captures made on the board
@@ -444,7 +456,7 @@ func handlePawnPromotions(target int, promo int) {
 	} else {
 		GameBoards[BlackPawn].PopBit(target)
 	}
-	// add a promoted piece to the target square
+	// set promoted piece
 	GameBoards[promo].SetBit(target)
 }
 
@@ -489,11 +501,13 @@ func handleCastlingMove(target int) {
 	}
 }
 
+// update castlign rights of new board position
 func updateCastlingRights(source int, target int) {
 	Castle &= CastlingRightsHelper[source]
 	Castle &= CastlingRightsHelper[target]
 }
 
+// update occupancies to reflect new board position
 func updateOccupancyBoard() {
 	// reset the boards
 	for i := 0; i < 3; i++ {
@@ -520,14 +534,14 @@ func TestMakeMove() {
 	for i := 0; i < MoveList.move_count; i++ {
 		move := MoveList.move_list[i]
 		COPY()
-		//PrintGameboard()
-		GameOccupancy[Both].PrintBitboard()
+		if MakeMove(move, allMoves) == 0 {
+			continue;
+		}
+		PrintGameboard()
 		fmt.Print("Move #", i+1, "   ")
 		MoveList.printMove(move)
-		MakeMove(move, 0)
-		GameOccupancy[Both].PrintBitboard()
-		//PrintGameboard()
 		RESTORE()
+		PrintGameboard()
 		buf := bufio.NewReader(os.Stdin)
 		buf.ReadBytes('\n')
 	}
