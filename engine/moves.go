@@ -32,6 +32,7 @@ var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
 func GeneratePositionMoves() {
 	// clear any moves from previous position
 	MoveList.move_count = 0
+	MoveList.move_list = [256]int{}
 	// loop over every piece
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// generate based on side moving, and then piece
@@ -93,7 +94,7 @@ func genPawnMoves(side int) {
 			}
 
 			// init pawn attacks & find attacks on only black pieces
-			attacks = PawnAttacks[White][source] & GameOccupancy[Black]
+			attacks = PawnAttacks[side][source] & GameOccupancy[Black]
 			// loop over attacks bitboard
 			for attacks != 0 {
 				target = attacks.LSBIndex()
@@ -112,10 +113,9 @@ func genPawnMoves(side int) {
 			// enpssant captures
 			if Enpassant != 64 {
 				// see if this square is under attack by current pawn placement
-				enpassant_attacks := PawnAttacks[White][source] & (1 << Enpassant)
+				enpassant_attacks := PawnAttacks[side][source] & (1 << Enpassant)
 				if enpassant_attacks != 0 {
 					target_enpassant := enpassant_attacks.LSBIndex()
-					enpassant_attacks.PopBit(target_enpassant)
 					MoveList.addMove(encodeMove(source, target_enpassant, int(WhitePawn), 0, 1, 0, 1, 0))
 
 				}
@@ -148,7 +148,7 @@ func genPawnMoves(side int) {
 				}
 			}
 			// init pawn attacks & find attacks on only white pieces
-			attacks = PawnAttacks[Black][source] & GameOccupancy[White]
+			attacks = PawnAttacks[side][source] & GameOccupancy[White]
 			// loop over attacks bitboard
 			for attacks != 0 {
 				target = attacks.LSBIndex()
@@ -166,10 +166,9 @@ func genPawnMoves(side int) {
 			// enpssant captures
 			if Enpassant != 64 {
 				// see if this square is under attack by current pawn placement
-				enpassant_attacks := PawnAttacks[Black][source] & (1 << Enpassant)
+				enpassant_attacks := PawnAttacks[side][source] & (1 << Enpassant)
 				if enpassant_attacks != 0 {
 					target_enpassant := enpassant_attacks.LSBIndex()
-					enpassant_attacks.PopBit(target_enpassant)
 					MoveList.addMove(encodeMove(source, target_enpassant, int(BlackPawn), 0, 1, 0, 1, 0))
 				}
 			}
@@ -416,16 +415,17 @@ func MakeMove(move int, move_flag int) int {
 				return 0
 			}
 		}
-		
+
 		// this was a legal move
 		return 1
 	} else {
 		if capture == 1 {
 			MakeMove(move, allMoves)
-		} 
-		// don't make this move
-		return 0
+		} else {
+			return 0
+		}
 	}
+	return 1
 }
 
 // captures made on the board
@@ -496,8 +496,8 @@ func handleCastlingMove(target int) {
 		GameBoards[BlackRook].SetBit(int(F8))
 		// black castle queen side, move A rook
 	case int(C8):
-		GameBoards[WhiteRook].PopBit(int(A8))
-		GameBoards[WhiteRook].SetBit(int(D8))
+		GameBoards[BlackRook].PopBit(int(A8))
+		GameBoards[BlackRook].SetBit(int(D8))
 	}
 }
 

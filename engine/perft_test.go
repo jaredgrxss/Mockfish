@@ -11,12 +11,8 @@ import (
 ***********************************************************************/
 
 // to test different positions, put fen below
-var nodes, captures, ep, castles, promotions int64 = 0, 0, 0, 0, 0
-var startPosition string = TRICKY_POSITION
-
-func getTime() int64 {
-	return time.Now().UnixNano() / 1e6
-}
+var nodes, captures, ep, castles, promotions, legal, nonLegal int64 = 0, 0, 0, 0, 0, 0, 0
+var startPosition string = TRICKY_POSITION; var perft_depth int = 2
 
 // main perft function
 func perftDriver(depth int) {
@@ -28,18 +24,11 @@ func perftDriver(depth int) {
 	// generate a positions moves
 	GeneratePositionMoves()
 	// loop over these moves
-	for move := 0; move < MoveList.move_count; move++ {
-		_, _, _, promo, capture, _, enpassant, castling := DecodeMove(MoveList.move_list[move])
-		captures += int64(capture)
-		castles += int64(castling)
-		ep += int64(enpassant)
-		if promo > 0 {
-			promotions++
-		}
+	for i := 0; i < MoveList.move_count; i++ {
 		// copy board position
 		COPY()
 		// move was illegal, don't make it
-		if MakeMove(MoveList.move_list[move], allMoves) == 0 {
+		if MakeMove(MoveList.move_list[i], allMoves) == 0 {
 			continue
 		}
 		// step into
@@ -49,20 +38,50 @@ func perftDriver(depth int) {
 	}
 }
 
-func TestTrickyPosition(t *testing.T) {
+func TestPerft(t *testing.T) {
 	// precompute attack data for pieces
 	GeneratePieceAttacks()
 	// parse the starting position & setting time
 	ParseFen(startPosition)
+	GeneratePositionMoves()
 	start := getTime()
-	// perft
-	perftDriver(3)
+	fmt.Printf("Starting perft test....\n")
+	for i := 0; i < 2; i++ {
+		source, target, _, promo, _, _, _, _ := DecodeMove(MoveList.move_list[i])
+		var promo_to_print = ""
+		if (promo != 0) {
+			promo_to_print = string(PromotedPieces[promo])
+		}
+		fmt.Printf("move: %s%s%s  side: %d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, SideToMove)
+		// copy board position
+		COPY()
+		// move was illegal, don't make it
+		if MakeMove(MoveList.move_list[i], allMoves) == 0 {
+			nonLegal++
+			continue
+		}
+		cummulative_nodes := nodes;
+
+		// step into
+		perftDriver(perft_depth - 1)
+
+		old_nodes := nodes - cummulative_nodes
+
+		// restore prev state
+		RESTORE()
+		fmt.Printf("move: %s%s%s  side: %d nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, SideToMove, old_nodes)
+	}
 	// results
 	fmt.Printf("total time taken: %d ms\n", getTime() - start)
 	fmt.Printf("total nodes reached: %d \n", nodes)
-	fmt.Printf("other information: \ncaptures: %d\nenpassant moves: %d\ncastles: %d\npromotions: %d\n", captures, ep, castles, promotions)
 }
 
-func TestInitialPosition(t *testing.T) {
 
+
+
+/*************
+	HELPERS
+*************/
+func getTime() int64 {
+	return time.Now().UnixNano() / 1e6
 }

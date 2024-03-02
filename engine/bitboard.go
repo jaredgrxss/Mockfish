@@ -52,7 +52,7 @@ const White_king_side, White_queen_side, Black_king_side, Black_queen_side = 1, 
 */
 
 var CastlingRightsHelper = [64]int {
-	7, 14, 15, 15, 3, 15, 15, 11,
+	7, 15, 15, 15, 3, 15, 15, 11,
 	15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15,
 	15, 15, 15, 15, 15, 15, 15, 15,
