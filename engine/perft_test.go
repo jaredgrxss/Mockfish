@@ -12,7 +12,7 @@ import (
 
 // to test different positions, put fen below
 var nodes, captures, ep, castles, promotions, legal, nonLegal int64 = 0, 0, 0, 0, 0, 0, 0
-var startPosition string = TRICKY_POSITION; var perft_depth int = 2
+var startPosition string = TEST_PERFTING; var perft_depth int = 5
 
 // main perft function
 func perftDriver(depth int) {
@@ -21,59 +21,107 @@ func perftDriver(depth int) {
 		nodes++
 		return 
 	}
+	var moves Moves
 	// generate a positions moves
-	GeneratePositionMoves()
+	GeneratePositionMoves(&moves)
+
 	// loop over these moves
-	for i := 0; i < MoveList.move_count; i++ {
+	for i := 0; i < moves.Move_count; i++ {
+		_, _, _, promo, capture, _, enp, castle := DecodeMove(moves.Move_list[i])
+		
 		// copy board position
-		COPY()
+		//COPY()
+		var GameBoards_Copy [12]Bitboard
+		var GameOccupancy_Copy [3]Bitboard
+		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
+		GameBoards_Copy = GameBoards
+		GameOccupancy_Copy = GameOccupancy
+		SideToMove_Copy = SideToMove
+		Enpassant_Copy = Enpassant
+		Castle_Copy = Castle
+		
 		// move was illegal, don't make it
-		if MakeMove(MoveList.move_list[i], allMoves) == 0 {
+		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
 		}
+
+
 		// step into
 		perftDriver(depth - 1)
+
 		// restore prev state
-		RESTORE()
+		// RESTORE()
+		ep += int64(enp)
+		captures += int64(capture)
+		castles += int64(castle)
+		if promo > 0 {
+			promotions++
+		}
+		GameBoards = GameBoards_Copy
+		GameOccupancy = GameOccupancy_Copy
+		SideToMove = SideToMove_Copy
+		Enpassant = Enpassant_Copy
+		Castle = Castle_Copy
 	}
 }
 
 func TestPerft(t *testing.T) {
-	// precompute attack data for pieces
 	GeneratePieceAttacks()
-	// parse the starting position & setting time
+	var moves Moves 
 	ParseFen(startPosition)
-	GeneratePositionMoves()
+	GeneratePositionMoves(&moves)
+
 	start := getTime()
 	fmt.Printf("Starting perft test....\n")
-	for i := 0; i < 2; i++ {
-		source, target, _, promo, _, _, _, _ := DecodeMove(MoveList.move_list[i])
+	for i := 0; i < moves.Move_count; i++ {
+		source, target, _, promo, capture, _, enp, castle := DecodeMove(moves.Move_list[i])
+		
+		// fmt.Println("GAMEBOARD IN:")
+		// PrintGameboard()
 		var promo_to_print = ""
 		if (promo != 0) {
 			promo_to_print = string(PromotedPieces[promo])
 		}
-		fmt.Printf("move: %s%s%s  side: %d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, SideToMove)
-		// copy board position
-		COPY()
-		// move was illegal, don't make it
-		if MakeMove(MoveList.move_list[i], allMoves) == 0 {
-			nonLegal++
+		// COPY()
+		var GameBoards_Copy [12]Bitboard
+		var GameOccupancy_Copy [3]Bitboard
+		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
+		GameBoards_Copy = GameBoards
+		GameOccupancy_Copy = GameOccupancy
+		SideToMove_Copy = SideToMove
+		Enpassant_Copy = Enpassant
+		Castle_Copy = Castle
+
+		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
 		}
-		cummulative_nodes := nodes;
 
-		// step into
+		
+		cummulative_nodes := nodes;
 		perftDriver(perft_depth - 1)
 
 		old_nodes := nodes - cummulative_nodes
+		ep += int64(enp)
+		captures += int64(capture)
+		castles += int64(castle)
+		if promo > 0 {
+			promotions++
+		}
 
-		// restore prev state
-		RESTORE()
+		// RESTORE()
+		GameBoards = GameBoards_Copy
+		GameOccupancy = GameOccupancy_Copy
+		SideToMove = SideToMove_Copy
+		Enpassant = Enpassant_Copy
+		Castle = Castle_Copy
+		// fmt.Println("GAMEBOARD OUT:")
+		// PrintGameboard()
 		fmt.Printf("move: %s%s%s  side: %d nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, SideToMove, old_nodes)
 	}
 	// results
 	fmt.Printf("total time taken: %d ms\n", getTime() - start)
 	fmt.Printf("total nodes reached: %d \n", nodes)
+	fmt.Printf("total captures: %d\ntotal enpassant: %d\ntotal castles: %d\ntotal promotions: %d\n", captures, ep, castles, promotions)
 }
 
 
