@@ -21,11 +21,6 @@ const (
 )
 
 
-// used for our COPY / MAKE approach
-// var GameBoards_Copy [12]Bitboard
-// var GameOccupancy_Copy [3]Bitboard
-// var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves(moves *Moves) {
 	// loop over every piece
@@ -330,22 +325,28 @@ func (moves Moves) Printmoves() {
 	}
 }
 
-// copy game state
+// // copy game state
 // func COPY() {
-// 	GameBoards_Copy = GameBoards
-// 	GameOccupancy_Copy = GameOccupancy
-// 	SideToMove_Copy = SideToMove
-// 	Enpassant_Copy = Enpassant
-// 	Castle_Copy = Castle
+// 	var currState GameState
+// 	currState.GameBoardCopy = GameBoards
+// 	currState.GameOccupancyCopy = GameOccupancy
+// 	currState.SideToMoveCopy = SideToMove
+// 	currState.CastleCopy = Castle
+// 	currState.EnpassantCopy = Enpassant
+// 	State = append(State, currState)
 // }
 
 // // restore previous game state
 // func RESTORE() {
-// 	GameBoards = GameBoards_Copy
-// 	GameOccupancy = GameOccupancy_Copy
-// 	SideToMove = SideToMove_Copy
-// 	Enpassant = Enpassant_Copy
-// 	Castle = Castle_Copy
+// 	if len(State) > 0 {
+// 		restoreState := State[len(State) - 1]
+// 		GameBoards = restoreState.GameBoardCopy
+// 		GameOccupancy = restoreState.GameOccupancyCopy
+// 		SideToMove = restoreState.SideToMoveCopy
+// 		Enpassant = restoreState.EnpassantCopy
+// 		Castle = restoreState.CastleCopy
+// 		State = State[:len(State) - 1]
+// 	}
 // }
 
 // main make move function
@@ -355,13 +356,6 @@ func MakeMove(move int, move_flag int) int {
 	// distinguish between quiet / capture moves
 	if move_flag == allMoves {
 		// preserve the board state
-		//COPY()
-		
-		/*
-			TESTING SOMETHING:
-
-
-		*/
 		var GameBoards_Copy [12]Bitboard
 		var GameOccupancy_Copy [3]Bitboard
 		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
@@ -381,7 +375,7 @@ func MakeMove(move int, move_flag int) int {
 		}
 
 		// handle if move was a promotion
-		if promo > 0 {
+		if promo != 0 {
 			handlePawnPromotions(target, promo)
 		}
 
@@ -415,12 +409,6 @@ func MakeMove(move int, move_flag int) int {
 		// check to see if check was put in check from move
 		if SideToMove == White {
 			if IsSquareAttacked(GameBoards[BlackKing].LSBIndex(), SideToMove) {
-				/*
-					TESTING SOMETHING:
-
-			
-				*/
-				//RESTORE()
 				GameBoards = GameBoards_Copy
 				GameOccupancy = GameOccupancy_Copy
 				SideToMove = SideToMove_Copy
@@ -430,12 +418,6 @@ func MakeMove(move int, move_flag int) int {
 			}
 		} else {
 			if IsSquareAttacked(GameBoards[WhiteKing].LSBIndex(), SideToMove) {
-				/*
-					TESTING SOMETHING:
-
-			
-				*/
-				//RESTORE()
 				GameBoards = GameBoards_Copy
 				GameOccupancy = GameOccupancy_Copy
 				SideToMove = SideToMove_Copy
@@ -444,7 +426,6 @@ func MakeMove(move int, move_flag int) int {
 				return 0
 			}
 		}
-
 		// this was a legal move
 		return 1
 	} else {
@@ -564,7 +545,7 @@ func TestMakeMove() {
 	GeneratePositionMoves(&moves)
 	for i := 0; i < moves.Move_count; i++ {
 		move := moves.Move_list[i]
-		// COPY()
+		// copy position
 		var GameBoards_Copy [12]Bitboard
 		var GameOccupancy_Copy [3]Bitboard
 		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
@@ -580,7 +561,7 @@ func TestMakeMove() {
 		PrintGameboard()
 		fmt.Print("Move #", i+1, "   ")
 		moves.printMove(move)
-		// RESTORE()
+		// restore position
 		GameBoards = GameBoards_Copy
 		GameOccupancy = GameOccupancy_Copy
 		SideToMove = SideToMove_Copy

@@ -18,7 +18,7 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
     - [Magic bitboards](https://www.chessprogramming.org/Magic_Bitboards#:~:text=Magic%20bitboards%20applies%20perfect%20hashing,different%2C%20but%20redundant%20outer%20squares.)
     - [Transposition Tables](https://www.chessprogramming.org/Transposition_Table)
     - [Attack Tables](https://www.chessprogramming.org/Attack_and_Defend_Maps)
-    - Opening Books
+    - [Opening Books]()
 - Search 
     - Coming soon...
 - Evaluation
@@ -34,3 +34,7 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 # Testing / Performance
 *Below I will try my best to update this brief overview of performance the engine develops at every level, seeing which techniques added the most elo boost and when*
 
+- Perft Test:
+    -
+
+- 

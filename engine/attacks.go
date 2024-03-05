@@ -281,9 +281,12 @@ func genKingAttacks(sq int) Bitboard {
 
 	// calculating attacks
 	// up / down don't need checks
-	attacks |= (bitboard << 8)
-	attacks |= (bitboard >> 8)
-
+	if (bitboard >> 8) != 0 {
+		attacks |= (bitboard >> 8)
+	}
+	if (bitboard << 8) != 0 {
+		attacks |= (bitboard << 8)
+	}
 	if (bitboard >> 1) & NOT_H_FILE != 0 {
 		attacks |= (bitboard >> 1)
 	}
@@ -613,7 +616,7 @@ func GeneratePieceAttacks() {
 		KingAttacks[i] = genKingAttacks(i)
 
 		// sliding piece attacks (0 == rook, 1 == bishop)
-		initSlidingPieceAtacks(0); initSlidingPieceAtacks(1)
+		initSlidingPieceAtacks(Rook); initSlidingPieceAtacks(Bishop)
 	}
 }
 
