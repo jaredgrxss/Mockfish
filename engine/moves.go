@@ -325,30 +325,6 @@ func (moves Moves) Printmoves() {
 	}
 }
 
-// // copy game state
-// func COPY() {
-// 	var currState GameState
-// 	currState.GameBoardCopy = GameBoards
-// 	currState.GameOccupancyCopy = GameOccupancy
-// 	currState.SideToMoveCopy = SideToMove
-// 	currState.CastleCopy = Castle
-// 	currState.EnpassantCopy = Enpassant
-// 	State = append(State, currState)
-// }
-
-// // restore previous game state
-// func RESTORE() {
-// 	if len(State) > 0 {
-// 		restoreState := State[len(State) - 1]
-// 		GameBoards = restoreState.GameBoardCopy
-// 		GameOccupancy = restoreState.GameOccupancyCopy
-// 		SideToMove = restoreState.SideToMoveCopy
-// 		Enpassant = restoreState.EnpassantCopy
-// 		Castle = restoreState.CastleCopy
-// 		State = State[:len(State) - 1]
-// 	}
-// }
-
 // main make move function
 func MakeMove(move int, move_flag int) int {
 	// parse the move information
@@ -539,6 +515,7 @@ func updateOccupancyBoard() {
 	GameOccupancy[Both] |= GameOccupancy[Black]
 }
 
+// quick test function for debugging
 func TestMakeMove() {
 	var moves Moves 
 	moves.Move_count = 0
