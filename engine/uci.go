@@ -1,7 +1,9 @@
 package engine
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -80,23 +82,25 @@ func ParseUCIMove(move_string string) int {
 */
 func ParseUCIPosition(command string) {
 	// make sure this is a position command
-	position, _ := regexp.MatchString("position", command)
+	position_re, _ := regexp.Compile("position")
+	position := position_re.MatchString(command)
 	if !position {
 		fmt.Println("Not a UCI position command.")
 		return
 	}
 	// see if the start position was asked for
-	startpos, _ := regexp.MatchString("startpos", command)
+	startpos_re, _ := regexp.Compile("startpos")
+	startpos := startpos_re.MatchString(command)
 	if startpos {
 		// this case put chess board to initial position
 		ParseFen(START_POSITION)
 	}
 	// see if a FEN string was passed
-	fen, _ := regexp.MatchString("fen", command)
+	fen_re, _ := regexp.Compile("fen")
+	fen := fen_re.MatchString(command)
 	if fen {
 		// gather the fen string and parse it
-		re := regexp.MustCompile("fen")
-		idx := re.FindStringIndex(command)[1] + 1
+		idx := fen_re.FindStringIndex(command)[1] + 1
 		fmt.Println("An UCI FEN string was passed.")
 		ParseFen(command[idx:])
 
@@ -107,11 +111,11 @@ func ParseUCIPosition(command string) {
 		return
 	}
 	// check to see if we have any moves
-	uci_moves, _ := regexp.MatchString("moves", command)
+	uci_moves_re, _ := regexp.Compile("moves")
+	uci_moves := uci_moves_re.MatchString(command)
 	if uci_moves {
 		// find the index of where the moves command ends
-		re := regexp.MustCompile("moves")
-		idx := re.FindStringIndex(command)[1] + 1
+		idx := uci_moves_re.FindStringIndex(command)[1] + 1
 		// gather the moves at the end of the string
 		moves := strings.Split(command[idx:], " ")
 		for i := 0; i < len(moves); i++ {
@@ -125,33 +129,88 @@ func ParseUCIPosition(command string) {
 
 		}
 	}
-
+	PrintGameboard()
 }
 
 /*
-command to make engine search for best move
-FIXED DEPTH = 6 at the moment
+command to make engine search for best move at a certain detph
 */
 func ParseUCIGo(command string) {
 	// find depth command and parse value
 	var depth int
-	find_depth, _ := regexp.MatchString("depth", command)
+	depth_re, _ := regexp.Compile("depth")
+	find_depth := depth_re.MatchString(command)
 	if find_depth {
-		re := regexp.MustCompile("depth")
-		idx := re.FindStringIndex(command)[1] + 1
+		idx := depth_re.FindStringIndex(command)[1] + 1
 		// parse out the depth integer from our command
-		found_depth, err := strconv.Atoi(string(command[idx:]))
+		found_depth, err := strconv.Atoi(strings.Trim(string(command[idx:]), "\r\n"))
 		// some error occured
 		if err != nil {
-			fmt.Println("Error reading in depth")
+			fmt.Println("Error reading in depth", err)
 			return
 		}
 		depth = found_depth
 	} else {
 		depth = 6
 	}
-
 	// search best move in given position
-	// SearchPosition(depth)
-	fmt.Println(depth)
+	SearchPosition(depth)
+}
+
+/*
+MAIN UCI LOOP
+
+	-------- COMMANDS --------
+		GUI --> isReady
+		readyok <-- Engine
+
+		GUI --> ucinewgame
+*/
+func RunUCI() {
+	fmt.Println("id name Mockfish")
+	fmt.Println("id name Jared Gross")
+	fmt.Println("uciok")
+	buf := bufio.NewReader(os.Stdin)
+	for {
+		// gui <---> engine handshake
+		input, _ := buf.ReadString('\n')
+		uci_isReady_re, _ := regexp.Compile("isready")
+		isReadyCmd := uci_isReady_re.MatchString(input)
+		if isReadyCmd {
+			fmt.Printf("readyok\n")
+			continue
+		}
+		// a position was sent
+		uci_position_re, _ := regexp.Compile("position")
+		position := uci_position_re.MatchString(input)
+		if position {
+			ParseUCIPosition(input)
+		}
+		// new game
+		ucinewgame_re, _ := regexp.Compile("ucinewgame")
+		ucinewgame := ucinewgame_re.MatchString(input)
+		if ucinewgame {
+			ParseUCIPosition("position startpos")
+		}
+		// GO command was sent
+		ucigo_re, _ := regexp.Compile("go")
+		ucigo := ucigo_re.MatchString(input)
+		if ucigo {
+			ParseUCIGo(input)
+		}
+		// indicating a quit game
+		uciquit_re, _ := regexp.Compile("quit")
+		uciquit := uciquit_re.MatchString(input)
+		if uciquit {
+			break
+		}
+		// testing if gui is uci compatible
+		uci_support_re, _ := regexp.Compile("uci")
+		uci_support := uci_support_re.MatchString(input)
+		if uci_support {
+			fmt.Printf("id name Mockfish\n")
+			fmt.Println("id name Jared Gross")
+			fmt.Printf("uciok\n")
+		}
+	}
 }

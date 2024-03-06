@@ -20,7 +20,10 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
     - [Attack Tables](https://www.chessprogramming.org/Attack_and_Defend_Maps)
     - [Opening Books]()
 - Search 
-    - Coming soon...
+    - Alpha-Beta Pruing
+    - Iterative Deepening
+    - Move Ordering 
+        -
 - Evaluation
     - Coming soon...
 
