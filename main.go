@@ -2,17 +2,11 @@ package main
 
 import (
 	"Mockfish/engine"
-	"fmt"
+	// "fmt"
 )
 
 func main() {
 	engine.GeneratePieceAttacks()
-	engine.ParseFen(engine.START_POSITION)
-	move := engine.ParseUCIMove("b2b6")
-	if move != 0 {
-		engine.MakeMove(move, 0)
-		engine.PrintGameboard()
-	} else {
-		fmt.Println("illegal move!")
-	}
+	engine.ParseUCIPosition("position startpos moves e2e4 e7e5 b1c3 g8f6 d1g4 g7g236 g4g6 h7g6")
+	engine.PrintGameboard()
 }

@@ -78,8 +78,8 @@ var PromotedPieces string = "pnbrqkpnbrqk"
 
 // unicode pieces for board representation in console
 var UnicodePieces [12]string = [12]string {
-	"♙", "♘", "♗", "♖", "♕", "♔", 
 	"♟︎", "♞", "♝", "♜", "♛", "♚",
+	"♙", "♘", "♗", "♖", "♕", "♔", 
 }
 
 var AsciiToType = map[string]Piece {

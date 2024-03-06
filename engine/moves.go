@@ -404,14 +404,11 @@ func MakeMove(move int, move_flag int) int {
 		}
 		// this was a legal move
 		return 1
-	} else {
-		if capture == 1 {
-			MakeMove(move, allMoves)
-		} else {
-			return 0
-		}
-	}
-	return 1
+	} else if capture == 1 {
+		MakeMove(move, allMoves)
+	} 
+	// bad move / bad input
+	return 0
 }
 
 // captures made on the board
