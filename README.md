@@ -34,7 +34,6 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 # Testing / Performance
 *Below I will try my best to update this brief overview of performance the engine develops at every level, seeing which techniques added the most elo boost and when*
 
-- Perft Test:
-    -
-
-- 
+- [Perft Test](https://www.chessprogramming.org/Perft_Results):
+    - This is the most basic of testing used to test your engine against millions of pre-calculated positions. Without this testing phase passing, your engine cannot be assured to work at even a basic level. I implemented a perft suite that can be used to test various positions to depths of your choosing to ensure any changes made to the move generator still pass a variety of different positions.
+        - ***Elo (N/A) / Elo Gain (N/a)***
