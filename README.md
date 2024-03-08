@@ -41,10 +41,15 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
     - This is the most basic of testing used to test your engine against millions of pre-calculated positions. Without this testing phase passing, your engine cannot be assured to work at even a basic level. I implemented a perft suite that can be used to test various positions to depths of your choosing to ensure any changes made to the move generator still pass a variety of different positions.
         - ***Elo (N/A) / Elo Gain (N/a)***
 
-- Static Piece Material Score 
+- [Static Piece Material Score](https://www.dailychess.com/rival/programming/evaluation.php)
     - This is the technique of assigning each piece. In practice this is quite bad, as when you load up the engine to play, it will simply move pieces around quite unintelligently. There's really little to give it 
         - *** Elo (50) / Elo Gain (+50) ***
 
-- Static Positional Score
+- [Static Positional Score](https://www.dailychess.com/rival/programming/evaluation.php)
     - This assigns a certain weight to every position for every different piece type (for instance, kings typically do better towards the edge of the board). This improved performance, but not by much...
-        - *** Elo (100) / Elo Gain (+50)***
+        - *** Elo (200) / Elo Gain (+150)***
+
+- [Alpha-Beta / Negamax Search](https://web.mit.edu/6.034/wwwbob/handout3-fall11.pdf)
+    - This is an enhanced variation of the minimax which is a exhaustive search algorithim in an alternating game. Minimax looks at all possible positions while Alpha-Beta prunes the search trees so it doesn't waste as much time searching non-optimal branches. 
+    
+    Here is about where it would take a game or two off of myself if I made a huge blunder, but would still fall victim to things like the horizon effect and not spotting killer moves, but it was cool to see it actually starting to beat an unskilled human XD. Also, the longer it thought the better it was, but at this point it was very slow past a depth >= 6 / 7

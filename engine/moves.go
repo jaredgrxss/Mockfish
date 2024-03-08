@@ -312,16 +312,6 @@ func (moves Moves) PrintMove(move int) {
 	fmt.Println()
 }
 
-// helper off of the moves object 
-func PrintUCICompatibleMove(move int) {
-	source, target, _, promo, _, _, _, _ := DecodeMove(move)
-	var promo_to_print = ""
-		if promo != 0 {
-			promo_to_print = string(PromotedPieces[promo])
-		}
-	fmt.Printf("%s%s%s", IntSquareToString[source], IntSquareToString[target], promo_to_print)
-}
-
 // print entire move list information for a given position
 func (moves Moves) Printmoves() {
 	if moves.Move_count == 0 {

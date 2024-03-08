@@ -157,6 +157,16 @@ func ParseUCIGo(command string) {
 	SearchPosition(depth)
 }
 
+// helper for uci printing moves
+func PrintUCICompatibleMove(move int) {
+	source, target, _, promo, _, _, _, _ := DecodeMove(move)
+	var promo_to_print = ""
+		if promo != 0 {
+			promo_to_print = string(PromotedPieces[promo])
+		}
+	fmt.Printf("%s%s%s", IntSquareToString[source], IntSquareToString[target], promo_to_print)
+}
+
 /*
 MAIN UCI LOOP
 
