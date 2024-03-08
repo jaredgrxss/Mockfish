@@ -296,7 +296,7 @@ func (moves *Moves) addMove(move int) {
 }
 
 // print a single move after decoding
-func (moves Moves) printMove(move int) {
+func (moves Moves) PrintMove(move int) {
 	source, target, piece, promo, capture, double, enpassant, castling := DecodeMove(move)
 	if promo == 0 {
 		fmt.Printf("move	  piece	     capture	 double	 enpassant	castling\n")
@@ -312,6 +312,16 @@ func (moves Moves) printMove(move int) {
 	fmt.Println()
 }
 
+// helper off of the moves object 
+func PrintUCICompatibleMove(move int) {
+	source, target, _, promo, _, _, _, _ := DecodeMove(move)
+	var promo_to_print = ""
+		if promo != 0 {
+			promo_to_print = string(PromotedPieces[promo])
+		}
+	fmt.Printf("%s%s%s", IntSquareToString[source], IntSquareToString[target], promo_to_print)
+}
+
 // print entire move list information for a given position
 func (moves Moves) Printmoves() {
 	if moves.Move_count == 0 {
@@ -321,7 +331,7 @@ func (moves Moves) Printmoves() {
 	// loop over move list and print each
 	for i := 0; i < moves.Move_count; i++ {
 		fmt.Print("Move #", i+1, "   ")
-		moves.printMove(moves.Move_list[i])
+		moves.PrintMove(moves.Move_list[i])
 	}
 }
 
@@ -534,7 +544,7 @@ func TestMakeMove() {
 		}
 		PrintGameboard()
 		fmt.Print("Move #", i+1, "   ")
-		moves.printMove(move)
+		moves.PrintMove(move)
 		// restore position
 		GameBoards = GameBoards_Copy
 		GameOccupancy = GameOccupancy_Copy

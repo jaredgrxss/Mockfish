@@ -87,14 +87,11 @@ func TestPerft(t *testing.T) {
 		}
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -144,14 +141,11 @@ func TestPerft2(t *testing.T) {
 		}
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -201,14 +195,11 @@ func TestPerft3(t *testing.T) {
 		}
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -259,14 +250,11 @@ func TestPerft4(t *testing.T) {
 		}
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -317,14 +305,11 @@ func TestPerft5(t *testing.T) {
 		}
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -375,14 +360,11 @@ func TestPerft6(t *testing.T) {
 		}
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue

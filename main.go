@@ -5,9 +5,11 @@ import (
 	// "fmt"
 )
 
+var debug int = 0
+
 func main() {
 	engine.GeneratePieceAttacks()
-	engine.ParseUCIPosition("position startpos")
-	engine.PrintGameboard()
-	engine.RunUCI()
+	if debug != 1 {
+		engine.RunUCI()
+	}
 }
