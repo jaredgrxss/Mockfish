@@ -51,5 +51,11 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 - [Alpha-Beta / Negamax Search](https://web.mit.edu/6.034/wwwbob/handout3-fall11.pdf)
     - This is an enhanced variation of the minimax which is a exhaustive search algorithim in an alternating game. Minimax looks at all possible positions while Alpha-Beta prunes the search trees so it doesn't waste as much time searching non-optimal branches. 
-    
-    Here is about where it would take a game or two off of myself if I made a huge blunder, but would still fall victim to things like the horizon effect and not spotting killer moves, but it was cool to see it actually starting to beat an unskilled human XD. Also, the longer it thought the better it was, but at this point it was very slow past a depth >= 6 / 7
+    - Here is about where it would take a game or two off of myself if I made a huge blunder, but would still fall victim to things like the horizon effect and not spotting killer moves, but it was cool to see it actually starting to beat an unskilled human XD. Also, the longer it thought the better it was, but at this point it was very slow past a depth >= 6 / 7
+
+- [Quiescence Search]()
+    - This is a method to only explore interesting search paths in a position that lead to devastating results if not accounted for (such as hanging queens and such), this will allow the engine to not make incredible blunders and increased play, but again not by much
+        - *** Elo (400) / Elo gain (+200)***
+
+- [Move Ordering]()
+    - 

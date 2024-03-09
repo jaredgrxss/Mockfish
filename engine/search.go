@@ -16,12 +16,13 @@ var BestMove int
 var NegamaxNodes = 0
 
 func Negamax(alpha int, beta int, depth int) int {
-	// evaluate position
-	if depth == 0 {
-		return Evaluate()
-	}
 	// increment nodes count
 	NegamaxNodes++
+
+	// evaluate position
+	if depth == 0 {
+		return Quiescence(alpha, beta)
+	}
 
 	// legal moves
 	legalMoves := 0
@@ -41,9 +42,10 @@ func Negamax(alpha int, beta int, depth int) int {
 	var oldAlpha = alpha
 
 	// generate moves
-	NegamaxNodes++
 	var moves Moves
 	GeneratePositionMoves(&moves)
+	// sort moves
+	SortMoves(&moves)
 
 	// loop over moves
 	for i := 0; i < moves.Move_count; i++ {
@@ -54,14 +56,18 @@ func Negamax(alpha int, beta int, depth int) int {
 		CastleCopy := Castle
 		EnpassantCopy := Enpassant
 		ply++
+
 		// check to see if move was legal
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			ply--
 			continue
 		}
+		// increase legal move counter
 		legalMoves++
 
+		// perform search
 		score := -Negamax(-beta, -alpha, depth-1)
+
 		// restore board
 		GameBoards = GameBoardsCopy
 		GameOccupancy = GameOccupancyCopy
@@ -86,7 +92,7 @@ func Negamax(alpha int, beta int, depth int) int {
 	// we have no legal moves
 	if legalMoves == 0 {
 		if inCheck {
-			return -49000 + ply
+			return -49000 + ply // returning mate (w/ closest distance to mating position)
 		} else {
 			return 0
 		}
@@ -101,6 +107,68 @@ func Negamax(alpha int, beta int, depth int) int {
 	return alpha
 }
 
+func Quiescence(alpha int, beta int) int {
+	NegamaxNodes++
+
+	eval := Evaluate()
+
+	if eval >= beta {
+		// move fails high
+		return beta
+	}
+
+	if eval > alpha {
+		// PV node
+		alpha = eval
+	}
+
+	// generate moves
+	var moves Moves
+	GeneratePositionMoves(&moves)
+	// sort moves
+	SortMoves(&moves)
+
+	// loop over moves
+	for i := 0; i < moves.Move_count; i++ {
+		// copy board
+		GameBoardsCopy := GameBoards
+		GameOccupancyCopy := GameOccupancy
+		SideToMoveCopy := SideToMove
+		CastleCopy := Castle
+		EnpassantCopy := Enpassant
+		ply++
+
+		// check to see if move was legal
+		if MakeMove(moves.Move_list[i], onlyCaptures) == 0 {
+			ply--
+			continue
+		}
+
+		// current score
+		score := -Quiescence(-beta, -alpha)
+
+		// restore board
+		GameBoards = GameBoardsCopy
+		GameOccupancy = GameOccupancyCopy
+		SideToMove = SideToMoveCopy
+		Castle = CastleCopy
+		Enpassant = EnpassantCopy
+		ply--
+
+		if score >= beta {
+			// move fails high
+			return beta
+		}
+
+		if score > alpha {
+			// PV node
+			alpha = score
+		}
+	}
+	// fails low
+	return alpha
+}
+
 func SearchPosition(depth int) {
 	// find best move
 	Negamax(-50000, 50000, depth)
@@ -108,4 +176,5 @@ func SearchPosition(depth int) {
 	fmt.Print("bestmove ")
 	PrintUCICompatibleMove(BestMove)
 	fmt.Println()
+	fmt.Println(NegamaxNodes)
 }

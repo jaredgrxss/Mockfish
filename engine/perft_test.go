@@ -40,14 +40,11 @@ func perftDriver(depth int) {
 		// _, _, _, _, _, _, _, _ := DecodeMove(moves.Move_list[i])
 
 		// copy board position
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoards_Copy := GameBoards
+		GameOccupancy_Copy := GameOccupancy
+		SideToMove_Copy := SideToMove
+		Enpassant_Copy := Enpassant
+		Castle_Copy := Castle
 
 		// move was illegal, don't make it
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {

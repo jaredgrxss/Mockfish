@@ -151,7 +151,7 @@ func ParseUCIGo(command string) {
 		}
 		depth = found_depth
 	} else {
-		depth = 6
+		depth = 7
 	}
 	// search best move in given position
 	SearchPosition(depth)

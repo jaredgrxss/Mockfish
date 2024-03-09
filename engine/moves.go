@@ -512,6 +512,13 @@ func updateOccupancyBoard() {
 	GameOccupancy[Both] |= GameOccupancy[Black]
 }
 
+func PrintMoveScores(moves Moves) {
+	for i := 0; i < moves.Move_count; i++ {
+		PrintUCICompatibleMove(moves.Move_list[i])
+		fmt.Printf(" score: %d\n", ScoreMove(moves.Move_list[i]))
+	}
+}
+
 // quick test function for debugging
 func TestMakeMove() {
 	var moves Moves 

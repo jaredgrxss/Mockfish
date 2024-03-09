@@ -1,5 +1,7 @@
 package engine
 
+// import "fmt"
+
 /*********************************
 
 	EVALUATION DRIVERS AND HELPERS
@@ -85,6 +87,74 @@ var mirrorScore = [64]Square{
 	A6, B6, C6, D6, E6, F6, G6, H6,
 	A7, B7, C7, D7, E7, F7, G7, H7,
 	A8, B8, C8, D8, E8, F8, G8, H8,
+}
+
+// lookup table for MVV_LVA
+var MVV_LVA = [12][12]int{
+	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
+	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
+	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
+	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
+	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
+	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
+	{105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605},
+	{104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604},
+	{103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603},
+	{102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602},
+	{101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601},
+	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
+}
+
+// using MVV_LVA
+func ScoreMove(move int) int {
+	_, target, piece, _, capture, _, _, _ := DecodeMove(move)
+	if capture == 1 {
+		var targetPiece = WhitePawn
+		var startPiece, endPiece Piece
+		if SideToMove == White {
+			startPiece = BlackPawn
+			endPiece = BlackKing
+		} else {
+			startPiece = WhitePawn 
+			endPiece = BlackPawn
+		}
+		for i := startPiece; i <= endPiece; i++ {
+			if GameBoards[i].GetBit(target) != 0 {
+				targetPiece = i
+				break
+			}
+		}
+		return MVV_LVA[piece][targetPiece]
+	} else {
+
+	}
+	return 0
+}
+
+func SortMoves(moves *Moves) {
+	var moveScores []int
+	// score move
+	for i := 0; i < moves.Move_count; i++ {
+		// score move
+		moveScores = append(moveScores, ScoreMove(moves.Move_list[i]))
+	}
+
+	for current := 0; current < moves.Move_count; current++ {
+		for next := current + 1; next < moves.Move_count; next++ {
+			if moveScores[current] < moveScores[next] {
+				// swap the scores
+				tempScore := moveScores[current]
+				moveScores[current] = moveScores[next]
+				moveScores[next] = tempScore
+				// swap the moves
+				tempMove := moves.Move_list[current]
+				moves.Move_list[current] = moves.Move_list[next]
+				moves.Move_list[next] = tempMove
+			}
+		}
+	}
+
+
 }
 
 func Evaluate() int {
