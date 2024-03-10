@@ -11,21 +11,28 @@ import (
 
 *******************************
 */
-var ply int = 0
-var BestMove int
+var Ply int = 0
 var NegamaxNodes = 0
 
-func Negamax(alpha int, beta int, depth int) int {
-	// increment nodes count
-	NegamaxNodes++
+const FULL_DEPTH_MOVES int = 4
+const REDUCTION_LIMIT int = 3
 
-	// evaluate position
+func Negamax(alpha int, beta int, depth int) int {
+
+	// init pv length
+	PVLength[Ply] = Ply
+
+	// evaluate position and base case
 	if depth == 0 {
 		return Quiescence(alpha, beta)
 	}
 
-	// legal moves
-	legalMoves := 0
+	if Ply > MAX_PLY-1 {
+		return Evaluate()
+	}
+
+	// increment nodes count
+	NegamaxNodes++
 
 	// check for king check
 	var inCheck bool
@@ -35,38 +42,98 @@ func Negamax(alpha int, beta int, depth int) int {
 		inCheck = IsSquareAttacked(GameBoards[BlackKing].LSBIndex(), SideToMove^1)
 	}
 
-	// store our best move found searching so far
-	var BestSoFar int
+	if inCheck {
+		depth++
+	}
 
-	// old value of alpha
-	var oldAlpha = alpha
+	// legal moves
+	legalMoves := 0
+
+	// NULL MOVE PRUNING
+	if depth >= 3 && !inCheck && Ply > 0 {
+		GameBoardsCopy := GameBoards
+		GameOccupancyCopy := GameOccupancy
+		SideToMoveCopy := SideToMove
+		CastleCopy := Castle
+		EnpassantCopy := Enpassant
+
+		SideToMove ^= 1
+		Enpassant = 64
+
+		// search moves with reduced depth to find beta cutoffs
+		score := -Negamax(-beta, -beta+1, depth-1-2)
+
+		GameBoards = GameBoardsCopy
+		GameOccupancy = GameOccupancyCopy
+		SideToMove = SideToMoveCopy
+		Castle = CastleCopy
+		Enpassant = EnpassantCopy
+
+		if score >= beta {
+			// fails high
+			return beta
+		}
+	}
 
 	// generate moves
 	var moves Moves
 	GeneratePositionMoves(&moves)
+
+	if FollowPv == 1 {
+		EnablePVMoveScoring(moves)
+	}
+
 	// sort moves
 	SortMoves(&moves)
 
+	// used for LMR
+	movesSearched := 0
+
 	// loop over moves
 	for i := 0; i < moves.Move_count; i++ {
+		// decode for history
+		_, target, piece, promo, capture, _, _, _ := DecodeMove(moves.Move_list[i])
+
 		// copy board
 		GameBoardsCopy := GameBoards
 		GameOccupancyCopy := GameOccupancy
 		SideToMoveCopy := SideToMove
 		CastleCopy := Castle
 		EnpassantCopy := Enpassant
-		ply++
+		Ply++
 
 		// check to see if move was legal
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
-			ply--
+			Ply--
 			continue
 		}
 		// increase legal move counter
 		legalMoves++
 
-		// perform search
-		score := -Negamax(-beta, -alpha, depth-1)
+		// store EVAL move score
+		var score int
+
+		if movesSearched == 0 {
+			// do a full normal search for non PV nodes
+			score = -Negamax(-beta, -alpha, depth-1)
+		} else {
+			// condition to use LMR
+			if movesSearched >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT && !inCheck && capture == 0 && promo == 0 {
+				score = -Negamax(-alpha-1, -alpha, depth-2) // search w/ reduced depth
+			} else {
+				score = alpha + 1 // make sure full detph search is done
+			}
+			// found a better move during LMR, re-search at normal depth
+			if score > alpha {
+				score = -Negamax(-alpha-1, -alpha, depth-1) // make aspiration window smaller
+
+				// if LMK fails, re-search at fll depth with normal aspiration bandwidth
+				if (score > alpha) && (score < beta) {
+					score = -Negamax(-beta, -alpha, depth-1)
+				}
+			}
+		}
+		
 
 		// restore board
 		GameBoards = GameBoardsCopy
@@ -74,39 +141,63 @@ func Negamax(alpha int, beta int, depth int) int {
 		SideToMove = SideToMoveCopy
 		Castle = CastleCopy
 		Enpassant = EnpassantCopy
-		ply--
+		Ply--
 
+		// increment number of moves searched
+		movesSearched++
+
+		// fail-hard beta cutoff
 		if score >= beta {
+			// only store killer moves on non capture moves
+			if capture == 0 {
+				// store killer moves
+				KillerMoves[1][Ply] = KillerMoves[0][Ply]
+				KillerMoves[0][Ply] = moves.Move_list[i]
+			}
+
 			// move fails high
 			return beta
 		}
 
+		// found a better move
 		if score > alpha {
+			// store history moves on non capture moves
+			if capture == 0 {
+				HistoryMoves[piece][target] += depth
+			}
+
 			// PV node
 			alpha = score
-			if ply == 0 {
-				BestSoFar = moves.Move_list[i]
+
+			// enable pv node flag
+			// foundPv = 1
+
+			// write PV move to PV table
+			PVTable[Ply][Ply] = moves.Move_list[i]
+			// loop next ply
+			for nxtPly := Ply + 1; nxtPly < PVLength[Ply+1]; nxtPly++ {
+				// copy moves from deeper ply
+				PVTable[Ply][nxtPly] = PVTable[Ply+1][nxtPly]
 			}
+
+			// adjust PV length
+			PVLength[Ply] = PVLength[Ply+1]
 		}
 	}
 	// we have no legal moves
 	if legalMoves == 0 {
 		if inCheck {
-			return -49000 + ply // returning mate (w/ closest distance to mating position)
+			return -49000 + Ply // returning mate
 		} else {
-			return 0
+			return 0 // stalemate
 		}
-	}
-
-	// found better move than previous
-	if oldAlpha != alpha {
-		BestMove = BestSoFar
 	}
 
 	// fails low
 	return alpha
 }
 
+// quiescence search for horizon effect
 func Quiescence(alpha int, beta int) int {
 	NegamaxNodes++
 
@@ -125,7 +216,8 @@ func Quiescence(alpha int, beta int) int {
 	// generate moves
 	var moves Moves
 	GeneratePositionMoves(&moves)
-	// sort moves
+
+	// sort moves with MVV_LVA heuristic
 	SortMoves(&moves)
 
 	// loop over moves
@@ -136,11 +228,11 @@ func Quiescence(alpha int, beta int) int {
 		SideToMoveCopy := SideToMove
 		CastleCopy := Castle
 		EnpassantCopy := Enpassant
-		ply++
+		Ply++
 
 		// check to see if move was legal
 		if MakeMove(moves.Move_list[i], onlyCaptures) == 0 {
-			ply--
+			Ply--
 			continue
 		}
 
@@ -153,7 +245,7 @@ func Quiescence(alpha int, beta int) int {
 		SideToMove = SideToMoveCopy
 		Castle = CastleCopy
 		Enpassant = EnpassantCopy
-		ply--
+		Ply--
 
 		if score >= beta {
 			// move fails high
@@ -170,11 +262,45 @@ func Quiescence(alpha int, beta int) int {
 }
 
 func SearchPosition(depth int) {
-	// find best move
-	Negamax(-50000, 50000, depth)
+	NegamaxNodes = 0
+
+	// reset our tables and vars
+	FollowPv = 0
+	ScorePv = 0
+	KillerMoves = [2][MAX_PLY]int{}
+	HistoryMoves = [12][64]int{}
+	PVTable = [MAX_PLY][MAX_PLY]int{}
+	PVLength = [MAX_PLY]int{}
+	// search variables
+	alpha := -50000
+	beta := 50000
+	search_depth := 1
+	// perform iterative deepening
+	for {
+		FollowPv = 1
+
+		// find best move
+		score := Negamax(alpha, beta, search_depth)
+		
+		/***************
+			LOGGING
+		***************/
+		fmt.Printf("ITERATIVE DEEPENING: info score cp %d depth %d nodes %d pv ", score, search_depth, NegamaxNodes)
+		for cnt := 0; cnt < PVLength[0]; cnt++ {
+			// print move
+			PrintUCICompatibleMove(PVTable[0][cnt])
+			fmt.Printf(" ")
+		}
+		fmt.Printf("\n")
+
+		search_depth++
+		if search_depth > depth {
+			break
+		}
+	}
+
 	// best move printed
 	fmt.Print("bestmove ")
-	PrintUCICompatibleMove(BestMove)
+	PrintUCICompatibleMove(PVTable[0][0])
 	fmt.Println()
-	fmt.Println(NegamaxNodes)
 }

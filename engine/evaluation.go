@@ -8,6 +8,7 @@ package engine
 
 *********************************/
 
+// static piece scores
 var pieceScore = [12]int{
 	100,    // white pawn
 	300,    // white knight
@@ -23,6 +24,7 @@ var pieceScore = [12]int{
 	-10000, // black king
 }
 
+// static positional scores
 var pawnScore = [64]int{
 	90, 90, 90, 90, 90, 90, 90, 90,
 	30, 30, 30, 40, 40, 30, 30, 30,
@@ -105,9 +107,55 @@ var MVV_LVA = [12][12]int{
 	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
 }
 
+// constants
+const MAX_PLY = 64
+
+// lookup table for killer moves [index][ply]
+var KillerMoves [2][MAX_PLY]int
+
+// lookup table for history moves [piece][square]
+var HistoryMoves [12][64]int
+
+// PV nodes
+var PVLength [MAX_PLY]int
+
+// PV table
+var PVTable [MAX_PLY][MAX_PLY]int
+
+// if we are following PV line
+var FollowPv int
+
+// scoring the PV line
+var ScorePv int
+
+func EnablePVMoveScoring(moves Moves) {
+	// disable PV following
+	FollowPv = 0
+
+	for i := 0; i < moves.Move_count; i++ {
+		if PVTable[0][Ply] == moves.Move_list[i] {
+			// enable move scoring
+			ScorePv = 1
+
+			// enable following pv
+			FollowPv = 1
+		}
+	}
+}
+
 // using MVV_LVA
 func ScoreMove(move int) int {
 	_, target, piece, _, capture, _, _, _ := DecodeMove(move)
+
+	// PV move scoring
+	if ScorePv == 1 {
+		if PVTable[0][Ply] == move {
+			ScorePv = 0
+			// give PV move the highest score
+			return 20000
+		}
+	}
+
 	if capture == 1 {
 		var targetPiece = WhitePawn
 		var startPiece, endPiece Piece
@@ -115,8 +163,8 @@ func ScoreMove(move int) int {
 			startPiece = BlackPawn
 			endPiece = BlackKing
 		} else {
-			startPiece = WhitePawn 
-			endPiece = BlackPawn
+			startPiece = WhitePawn
+			endPiece = WhiteKing
 		}
 		for i := startPiece; i <= endPiece; i++ {
 			if GameBoards[i].GetBit(target) != 0 {
@@ -124,21 +172,26 @@ func ScoreMove(move int) int {
 				break
 			}
 		}
-		return MVV_LVA[piece][targetPiece]
+		return MVV_LVA[piece][targetPiece] + 10000
 	} else {
-
+		if KillerMoves[0][Ply] == move { // 1st killer move
+			return 9000
+		} else if KillerMoves[1][Ply] == move { // 2nd killer move
+			return 8000
+		} else { // history move
+			return HistoryMoves[piece][target]
+		}
 	}
-	return 0
 }
 
 func SortMoves(moves *Moves) {
 	var moveScores []int
-	// score move
+	// loop
 	for i := 0; i < moves.Move_count; i++ {
-		// score move
+		// score
 		moveScores = append(moveScores, ScoreMove(moves.Move_list[i]))
 	}
-
+	// sort
 	for current := 0; current < moves.Move_count; current++ {
 		for next := current + 1; next < moves.Move_count; next++ {
 			if moveScores[current] < moveScores[next] {
@@ -153,8 +206,6 @@ func SortMoves(moves *Moves) {
 			}
 		}
 	}
-
-
 }
 
 func Evaluate() int {

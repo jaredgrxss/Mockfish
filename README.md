@@ -12,21 +12,6 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 *I more so wanted to explore advanced search, pruning, and bit operations in order to make a good engine.*
 
-# All Added Techniques
-- Board & Misc
-    - [Bitboards](https://www.chessprogramming.org/Bitboards)
-    - [Magic bitboards](https://www.chessprogramming.org/Magic_Bitboards#:~:text=Magic%20bitboards%20applies%20perfect%20hashing,different%2C%20but%20redundant%20outer%20squares.)
-    - [Transposition Tables](https://www.chessprogramming.org/Transposition_Table)
-    - [Attack Tables](https://www.chessprogramming.org/Attack_and_Defend_Maps)
-    - [Opening Books]()
-- Search 
-    - Alpha-Beta Pruing
-    - Iterative Deepening
-    - Move Ordering 
-        -
-- Evaluation
-    - Coming soon...
-
 # Setup / Running Details
 1. Download source code from this repository
 2. cd into "Mockfish" directory from your download destination
@@ -34,7 +19,7 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 4. This command should produce an executible (Mockfish.exe), you can download a UCI compatible interface and insert this file as your engine of choice
 
 
-# Testing / Performance
+# Testing, Performance, and Techniques
 *Below I will try my best to update this brief overview of performance the engine develops at every level, seeing which techniques added the most elo boost and when*
 
 - [Perft Test](https://www.chessprogramming.org/Perft_Results):
@@ -59,3 +44,19 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 - [Move Ordering]()
     - 
+
+- [Killer Moves]()
+
+
+- [History Moves]()
+
+
+- [Principle Variation]()
+
+- [Iterative Deepening]()
+
+- [Principle Variation Serach]()
+
+- [Late Move Reduction]()
+
+- [Null Move Pruning]()
