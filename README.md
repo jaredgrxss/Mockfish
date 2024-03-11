@@ -43,7 +43,6 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
         - *** Elo (400) / Elo gain (+200)***
 
 - [Move Ordering]()
-    - 
 
 - [Killer Moves]()
 
