@@ -53,10 +53,17 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 - [Principle Variation]()
 
+
 - [Iterative Deepening]()
+
 
 - [Principle Variation Serach]()
 
+
 - [Late Move Reduction]()
 
+
 - [Null Move Pruning]()
+
+
+- [Zobrist Hashing / Transposition Tables]()

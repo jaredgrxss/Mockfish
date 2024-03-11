@@ -25,9 +25,16 @@ var PERFT_TEST6 = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1
 var nodes, captures, ep, castles, promotions int64 = 0, 0, 0, 0, 0
 
 // main perft function
-func perftDriver(depth int) {
+func PerftDriver(depth int, move int) {
 	// we've reached a leaf
 	if depth == 0 {
+		_, _, _, promo, capture, _, enp, castling := DecodeMove(move)
+		captures += int64(capture) 
+		ep += int64(enp) 
+		castles += int64(castling)
+		if promo != 0 {
+			promotions += 1
+		}
 		nodes++
 		return
 	}
@@ -52,7 +59,7 @@ func perftDriver(depth int) {
 		}
 
 		// step into
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1, moves.Move_list[i])
 
 		// restore board position
 		GameBoards = GameBoards_Copy
@@ -95,7 +102,7 @@ func TestPerft(t *testing.T) {
 		}
 
 		cummulative_nodes := nodes
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1,  moves.Move_list[i])
 
 		old_nodes := nodes - cummulative_nodes
 
@@ -114,6 +121,8 @@ func TestPerft(t *testing.T) {
 	fmt.Printf("\n	Depth: %d\n", depth)
 	fmt.Printf("	Total Time: %d ms\n", getTime()-start)
 	fmt.Printf("	Total Nodes: %d \n", nodes)
+	fmt.Printf("	Total Captures: %d, Total Ep: %d, Total Castles: %d, Total Promotions: %d \n", captures, ep, castles, promotions)
+
 }
 
 func TestPerft2(t *testing.T) {
@@ -149,7 +158,7 @@ func TestPerft2(t *testing.T) {
 		}
 
 		cummulative_nodes := nodes
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1,  moves.Move_list[i])
 
 		old_nodes := nodes - cummulative_nodes
 
@@ -168,6 +177,8 @@ func TestPerft2(t *testing.T) {
 	fmt.Printf("\n	Depth: %d\n", depth)
 	fmt.Printf("	Total Time: %d ms\n", getTime()-start)
 	fmt.Printf("	Total Nodes: %d \n", nodes)
+	fmt.Printf("	Total Captures: %d, Total Ep: %d, Total Castles: %d, Total Promotions: %d \n", captures, ep, castles, promotions)
+
 }
 
 func TestPerft3(t *testing.T) {
@@ -203,7 +214,7 @@ func TestPerft3(t *testing.T) {
 		}
 
 		cummulative_nodes := nodes
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1, moves.Move_list[i])
 
 		old_nodes := nodes - cummulative_nodes
 
@@ -223,6 +234,8 @@ func TestPerft3(t *testing.T) {
 	fmt.Printf("\n	Depth: %d\n", depth)
 	fmt.Printf("	Total Time: %d ms\n", getTime()-start)
 	fmt.Printf("	Total Nodes: %d \n", nodes)
+	fmt.Printf("	Total Captures: %d, Total Ep: %d, Total Castles: %d, Total Promotions: %d \n", captures, ep, castles, promotions)
+
 }
 
 func TestPerft4(t *testing.T) {
@@ -258,7 +271,7 @@ func TestPerft4(t *testing.T) {
 		}
 
 		cummulative_nodes := nodes
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1,  moves.Move_list[i])
 
 		old_nodes := nodes - cummulative_nodes
 
@@ -278,6 +291,8 @@ func TestPerft4(t *testing.T) {
 	fmt.Printf("\n	Depth: %d\n", depth)
 	fmt.Printf("	Total Time: %d ms\n", getTime()-start)
 	fmt.Printf("	Total Nodes: %d \n", nodes)
+	fmt.Printf("	Total Captures: %d, Total Ep: %d, Total Castles: %d, Total Promotions: %d \n", captures, ep, castles, promotions)
+
 }
 
 func TestPerft5(t *testing.T) {
@@ -313,7 +328,7 @@ func TestPerft5(t *testing.T) {
 		}
 
 		cummulative_nodes := nodes
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1,  moves.Move_list[i])
 
 		old_nodes := nodes - cummulative_nodes
 
@@ -333,6 +348,8 @@ func TestPerft5(t *testing.T) {
 	fmt.Printf("\n	Depth: %d\n", depth)
 	fmt.Printf("	Total Time: %d ms\n", getTime()-start)
 	fmt.Printf("	Total Nodes: %d \n", nodes)
+	fmt.Printf("	Total Captures: %d, Total Ep: %d, Total Castles: %d, Total Promotions: %d \n", captures, ep, castles, promotions)
+
 }
 
 func TestPerft6(t *testing.T) {
@@ -368,7 +385,7 @@ func TestPerft6(t *testing.T) {
 		}
 
 		cummulative_nodes := nodes
-		perftDriver(depth - 1)
+		PerftDriver(depth - 1,  moves.Move_list[i])
 
 		old_nodes := nodes - cummulative_nodes
 
@@ -388,6 +405,7 @@ func TestPerft6(t *testing.T) {
 	fmt.Printf("\n	Depth: %d\n", depth)
 	fmt.Printf("	Total Time: %d ms\n", getTime()-start)
 	fmt.Printf("	Total Nodes: %d \n", nodes)
+	fmt.Printf("	Total Captures: %d, Total Ep: %d, Total Castles: %d, Total Promotions: %d \n", captures, ep, castles, promotions)
 }
 
 /*

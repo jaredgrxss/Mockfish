@@ -17,7 +17,23 @@ var NegamaxNodes = 0
 const FULL_DEPTH_MOVES int = 4
 const REDUCTION_LIMIT int = 3
 
+var nodesSaved = 0
+
 func Negamax(alpha int, beta int, depth int) int {
+	// node score
+	var score int
+
+	// define hash flag for TT
+	hashFlag := HashFlagAlpha
+
+	// read cache
+	if Ply > 0 &&
+		score == ReadHashData(alpha, beta, depth) &&
+		ReadHashData(alpha, beta, depth) != NO_HASH_ENTRY {
+		nodesSaved++
+		// if we have seen this move, return score without searching
+		return score
+	}
 
 	// init pv length
 	PVLength[Ply] = Ply
@@ -56,18 +72,31 @@ func Negamax(alpha int, beta int, depth int) int {
 		SideToMoveCopy := SideToMove
 		CastleCopy := Castle
 		EnpassantCopy := Enpassant
+		Ply++
+		HashKeyCopy := HashKey
+
+		// hash enpassant
+		if Enpassant != 64 {
+			HashKey ^= EnpassantKeys[Enpassant]
+		}
 
 		SideToMove ^= 1
+
+		// hash side if it is black
+		HashKey ^= SideKey
+
 		Enpassant = 64
 
 		// search moves with reduced depth to find beta cutoffs
 		score := -Negamax(-beta, -beta+1, depth-1-2)
 
+		Ply--
 		GameBoards = GameBoardsCopy
 		GameOccupancy = GameOccupancyCopy
 		SideToMove = SideToMoveCopy
 		Castle = CastleCopy
 		Enpassant = EnpassantCopy
+		HashKey = HashKeyCopy
 
 		if score >= beta {
 			// fails high
@@ -100,19 +129,18 @@ func Negamax(alpha int, beta int, depth int) int {
 		SideToMoveCopy := SideToMove
 		CastleCopy := Castle
 		EnpassantCopy := Enpassant
+		HashKeyCopy := HashKey
 		Ply++
 
 		// check to see if move was legal
-		if MakeMove(moves.Move_list[i], allMoves) == 0 {
+		if MakeMove(moves.Move_list[i], 0) == 0 {
 			Ply--
 			continue
 		}
 		// increase legal move counter
 		legalMoves++
 
-		// store EVAL move score
-		var score int
-
+		// LMR
 		if movesSearched == 0 {
 			// do a full normal search for non PV nodes
 			score = -Negamax(-beta, -alpha, depth-1)
@@ -123,7 +151,7 @@ func Negamax(alpha int, beta int, depth int) int {
 			} else {
 				score = alpha + 1 // make sure full detph search is done
 			}
-			// found a better move during LMR, re-search at normal depth
+			// PV search
 			if score > alpha {
 				score = -Negamax(-alpha-1, -alpha, depth-1) // make aspiration window smaller
 
@@ -133,7 +161,6 @@ func Negamax(alpha int, beta int, depth int) int {
 				}
 			}
 		}
-		
 
 		// restore board
 		GameBoards = GameBoardsCopy
@@ -141,26 +168,17 @@ func Negamax(alpha int, beta int, depth int) int {
 		SideToMove = SideToMoveCopy
 		Castle = CastleCopy
 		Enpassant = EnpassantCopy
+		HashKey = HashKeyCopy
 		Ply--
 
 		// increment number of moves searched
 		movesSearched++
 
-		// fail-hard beta cutoff
-		if score >= beta {
-			// only store killer moves on non capture moves
-			if capture == 0 {
-				// store killer moves
-				KillerMoves[1][Ply] = KillerMoves[0][Ply]
-				KillerMoves[0][Ply] = moves.Move_list[i]
-			}
-
-			// move fails high
-			return beta
-		}
-
 		// found a better move
 		if score > alpha {
+			// switch our hash flag
+			hashFlag = HashFlagExact
+
 			// store history moves on non capture moves
 			if capture == 0 {
 				HistoryMoves[piece][target] += depth
@@ -169,11 +187,9 @@ func Negamax(alpha int, beta int, depth int) int {
 			// PV node
 			alpha = score
 
-			// enable pv node flag
-			// foundPv = 1
-
 			// write PV move to PV table
 			PVTable[Ply][Ply] = moves.Move_list[i]
+
 			// loop next ply
 			for nxtPly := Ply + 1; nxtPly < PVLength[Ply+1]; nxtPly++ {
 				// copy moves from deeper ply
@@ -182,6 +198,22 @@ func Negamax(alpha int, beta int, depth int) int {
 
 			// adjust PV length
 			PVLength[Ply] = PVLength[Ply+1]
+
+			// fail-hard beta cutoff
+			if score >= beta {
+				// store hash entry for TT
+				WriteHashData(beta, depth, HashFlagBeta)
+
+				// only store killer moves on non capture moves
+				if capture == 0 {
+					// store killer moves
+					KillerMoves[1][Ply] = KillerMoves[0][Ply]
+					KillerMoves[0][Ply] = moves.Move_list[i]
+				}
+
+				// move fails high
+				return beta
+			}
 		}
 	}
 	// we have no legal moves
@@ -193,13 +225,23 @@ func Negamax(alpha int, beta int, depth int) int {
 		}
 	}
 
+	// write hash entry to store alpha
+	WriteHashData(alpha, depth, hashFlag)
+
 	// fails low
 	return alpha
 }
 
 // quiescence search for horizon effect
 func Quiescence(alpha int, beta int) int {
+	// score of node
+	var score int
+
 	NegamaxNodes++
+
+	if Ply > MAX_PLY-1 {
+		return Evaluate()
+	}
 
 	eval := Evaluate()
 
@@ -214,30 +256,31 @@ func Quiescence(alpha int, beta int) int {
 	}
 
 	// generate moves
-	var moves Moves
-	GeneratePositionMoves(&moves)
+	var q_moves Moves
+	GeneratePositionMoves(&q_moves)
 
 	// sort moves with MVV_LVA heuristic
-	SortMoves(&moves)
+	SortMoves(&q_moves)
 
 	// loop over moves
-	for i := 0; i < moves.Move_count; i++ {
+	for i := 0; i < q_moves.Move_count; i++ {
 		// copy board
 		GameBoardsCopy := GameBoards
 		GameOccupancyCopy := GameOccupancy
 		SideToMoveCopy := SideToMove
 		CastleCopy := Castle
 		EnpassantCopy := Enpassant
+		HashKeyCopy := HashKey
 		Ply++
 
 		// check to see if move was legal
-		if MakeMove(moves.Move_list[i], onlyCaptures) == 0 {
+		if MakeMove(q_moves.Move_list[i], onlyCaptures) == 0 {
 			Ply--
 			continue
 		}
 
 		// current score
-		score := -Quiescence(-beta, -alpha)
+		score = -Quiescence(-beta, -alpha)
 
 		// restore board
 		GameBoards = GameBoardsCopy
@@ -245,16 +288,17 @@ func Quiescence(alpha int, beta int) int {
 		SideToMove = SideToMoveCopy
 		Castle = CastleCopy
 		Enpassant = EnpassantCopy
+		HashKey = HashKeyCopy
 		Ply--
-
-		if score >= beta {
-			// move fails high
-			return beta
-		}
 
 		if score > alpha {
 			// PV node
 			alpha = score
+
+			if score >= beta {
+				// move fails high
+				return beta
+			}
 		}
 	}
 	// fails low
@@ -271,21 +315,26 @@ func SearchPosition(depth int) {
 	HistoryMoves = [12][64]int{}
 	PVTable = [MAX_PLY][MAX_PLY]int{}
 	PVLength = [MAX_PLY]int{}
+
 	// search variables
 	alpha := -50000
 	beta := 50000
 	search_depth := 1
+
+	// clear transposition table
+	ClearTranspositionTable()
+
 	// perform iterative deepening
 	for {
 		FollowPv = 1
 
 		// find best move
 		score := Negamax(alpha, beta, search_depth)
-		
+
 		/***************
 			LOGGING
 		***************/
-		fmt.Printf("ITERATIVE DEEPENING: info score cp %d depth %d nodes %d pv ", score, search_depth, NegamaxNodes)
+		fmt.Printf("ITERATIVE DEEPENING: eval: %d depth: %d nodes: %d nodes saved: %d pv ", score, search_depth, NegamaxNodes, nodesSaved)
 		for cnt := 0; cnt < PVLength[0]; cnt++ {
 			// print move
 			PrintUCICompatibleMove(PVTable[0][cnt])

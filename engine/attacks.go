@@ -452,33 +452,33 @@ func setOccupancy(idx int, bitCnt int, attackMask Bitboard) Bitboard {
 *******************************/
 
 // state for PRNG func
-// var random_state uint32 = 1010243240
+var RandomState uint32 = 1010243240
 
 // psuedo 32 bit random number generator for PRNG 
-// func Get_u32_rand() uint32 {
-// 	// retreive current state
-// 	x := random_state
+func Get_u32_rand() uint32 {
+	// retreive current state
+	x := RandomState
 
-// 	// xor shift 32 algorithm
-// 	x ^= (x << 13)
-// 	x ^= (x >> 17)
-// 	x ^= (x << 5)
-// 	random_state = x 
+	// xor shift 32 algorithm
+	x ^= (x << 13)
+	x ^= (x >> 17)
+	x ^= (x << 5)
+	RandomState = x 
 
-// 	// return PRN
-// 	return x
-// }
+	// return PRN
+	return x
+}
 
-// // psudo 64 bit random number generator 
-// func get_u64_rand() uint64 {
-// 	// get 4 random numbers
-// 	var n1, n2, n3, n4 uint64
-// 	n1 = uint64(Get_u32_rand()) & 0xFFFF; n2 = uint64(Get_u32_rand()) & 0xFFFF
-// 	n3 = uint64(Get_u32_rand()) & 0xFFFF; n4 = uint64(Get_u32_rand()) & 0xFFFF
+// psudo 64 bit random number generator 
+func Get_u64_rand() uint64 {
+	// get 4 random numbers
+	var n1, n2, n3, n4 uint64
+	n1 = uint64(Get_u32_rand()) & 0xFFFF; n2 = uint64(Get_u32_rand()) & 0xFFFF
+	n3 = uint64(Get_u32_rand()) & 0xFFFF; n4 = uint64(Get_u32_rand()) & 0xFFFF
 
-// 	// return 64 bit PRNG
-// 	return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48)
-// }
+	// return 64 bit PRNG
+	return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48)
+}
 
 // // count bits of a regular unsigned 64 bit number
 // func count_bits(number uint64) int {

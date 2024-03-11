@@ -241,6 +241,8 @@ func (bitboard Bitboard) PrintBitboard() {
 	if (Castle & Black_king_side != 0) { BK = "k" } else { BK = "-"}
 	if (Castle & Black_queen_side != 0) { BQ = "q" } else { BQ = "-"}
 	fmt.Println("    Castling: ", WK, WQ, BK, BQ)
+	// print hash key
+	fmt.Println("    Hash Key: ", HashKey)
 	fmt.Println()
  }
 
@@ -335,6 +337,9 @@ func ParseFen(fen string) {
 	// set occupancy for both
 	GameOccupancy[Both] |= GameOccupancy[White]
 	GameOccupancy[Both] |= GameOccupancy[Black]
+
+	// init hash key for given position
+	HashKey = GenerateHashKey()
 
 	fmt.Println("FEN STRING:", fen)
 }

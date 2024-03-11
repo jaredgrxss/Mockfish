@@ -20,7 +20,6 @@ const (
 	onlyCaptures
 )
 
-
 // main function to generate all PSUEDO LEGAL moves of a given position
 func GeneratePositionMoves(moves *Moves) {
 	// loop over every piece
@@ -332,18 +331,20 @@ func MakeMove(move int, move_flag int) int {
 	// distinguish between quiet / capture moves
 	if move_flag == allMoves {
 		// preserve the board state
-		var GameBoards_Copy [12]Bitboard
-		var GameOccupancy_Copy [3]Bitboard
-		var SideToMove_Copy, Enpassant_Copy, Castle_Copy int
-		GameBoards_Copy = GameBoards
-		GameOccupancy_Copy = GameOccupancy
-		SideToMove_Copy = SideToMove
-		Enpassant_Copy = Enpassant
-		Castle_Copy = Castle
+		GameBoardsCopy := GameBoards
+		GameOccupancyCopy := GameOccupancy
+		SideToMoveCopy := SideToMove
+		EnpassantCopy := Enpassant
+		CastleCopy := Castle
+		HashKeyCopy := HashKey
 
 		// perform the move
 		GameBoards[piece].PopBit(source)
 		GameBoards[piece].SetBit(target)
+
+		// hash piece info
+		HashKey ^= PieceKeys[piece][source] // remove source piece info
+		HashKey ^= PieceKeys[piece][target] // addd target piece info
 
 		// handle if move was a capture
 		if capture == 1 {
@@ -358,6 +359,11 @@ func MakeMove(move int, move_flag int) int {
 		// handle if move was an enpassant move
 		if enpassant == 1 {
 			handleEnpassantMove(target)
+		}
+
+		// hash enpassant (remove enpassant)
+		if Enpassant != 64 {
+			HashKey ^= EnpassantKeys[Enpassant]
 		}
 
 		// reset enpassant if it is not chosen as a move
@@ -379,26 +385,42 @@ func MakeMove(move int, move_flag int) int {
 		// update occupancy boards with every move
 		updateOccupancyBoard()
 
-		// change side 
+		// change side
 		SideToMove ^= 1
+
+		// hash the side
+		HashKey ^= SideKey
+
+		/***********************
+			ZOBRIST HASHING DEBUGGING
+		***********************/
+		// build hash key after move made
+		// NewHash := GenerateHashKey()
+		// if NewHash != HashKey {
+		// 	fmt.Print("move: ")
+		// 	PrintUCICompatibleMove(move)
+		// 	fmt.Printf(" hash key should be: %d but is %d\n", NewHash, HashKey)
+		// }
 
 		// check to see if check was put in check from move
 		if SideToMove == White {
 			if IsSquareAttacked(GameBoards[BlackKing].LSBIndex(), SideToMove) {
-				GameBoards = GameBoards_Copy
-				GameOccupancy = GameOccupancy_Copy
-				SideToMove = SideToMove_Copy
-				Enpassant = Enpassant_Copy
-				Castle = Castle_Copy
+				GameBoards = GameBoardsCopy
+				GameOccupancy = GameOccupancyCopy
+				SideToMove = SideToMoveCopy
+				Enpassant = EnpassantCopy
+				Castle = CastleCopy
+				HashKey = HashKeyCopy
 				return 0
 			}
 		} else {
 			if IsSquareAttacked(GameBoards[WhiteKing].LSBIndex(), SideToMove) {
-				GameBoards = GameBoards_Copy
-				GameOccupancy = GameOccupancy_Copy
-				SideToMove = SideToMove_Copy
-				Enpassant = Enpassant_Copy
-				Castle = Castle_Copy
+				GameBoards = GameBoardsCopy
+				GameOccupancy = GameOccupancyCopy
+				SideToMove = SideToMoveCopy
+				Enpassant = EnpassantCopy
+				Castle = CastleCopy
+				HashKey = HashKeyCopy
 				return 0
 			}
 		}
@@ -406,7 +428,7 @@ func MakeMove(move int, move_flag int) int {
 		return 1
 	} else if capture == 1 {
 		MakeMove(move, allMoves)
-	} 
+	}
 	// bad move / bad input
 	return 0
 }
@@ -426,6 +448,9 @@ func handleCaptureMove(target int) {
 	for i := startPiece; i <= endPiece; i++ {
 		if GameBoards[i].GetBit(target) == 1 {
 			GameBoards[i].PopBit(target)
+
+			// remove piece from hashkey
+			HashKey ^= PieceKeys[i][target]
 			break
 		}
 	}
@@ -436,11 +461,18 @@ func handlePawnPromotions(target int, promo int) {
 	// erase pawn from target square
 	if SideToMove == White {
 		GameBoards[WhitePawn].PopBit(target)
+
+		// remove pawn hash key
+		HashKey ^= PieceKeys[WhitePawn][target]
 	} else {
 		GameBoards[BlackPawn].PopBit(target)
+		// remove pawn hash key
+		HashKey ^= PieceKeys[BlackPawn][target]
 	}
 	// set promoted piece
 	GameBoards[promo].SetBit(target)
+	// add promoted
+	HashKey ^= PieceKeys[promo][target]
 }
 
 // enpassent captures made on the board
@@ -451,14 +483,30 @@ func handleEnpassantMove(target int) {
 	} else {
 		GameBoards[WhitePawn].PopBit(target - 8)
 	}
+
+	// hashing info
+	if SideToMove == White {
+		GameBoards[BlackPawn].PopBit(target + 8)
+
+		// remove hash
+		HashKey ^= PieceKeys[BlackPawn][target+8]
+	} else {
+		GameBoards[WhitePawn].PopBit(target - 8)
+		// remove hash
+		HashKey ^= PieceKeys[WhitePawn][target-8]
+	}
 }
 
 // a double pawn push was made on the board
 func handleDoublePawnPush(target int) {
 	if SideToMove == White {
 		Enpassant = target + 8
+		// hash enpassant
+		HashKey ^= EnpassantKeys[target+8]
 	} else {
 		Enpassant = target - 8
+		// has nepassant
+		HashKey ^= EnpassantKeys[target-8]
 	}
 }
 
@@ -469,25 +517,47 @@ func handleCastlingMove(target int) {
 	case int(G1):
 		GameBoards[WhiteRook].PopBit(int(H1))
 		GameBoards[WhiteRook].SetBit(int(F1))
-		// white castle queen side, move A rook
+		// hash rook
+		HashKey ^= PieceKeys[WhiteRook][int(H1)]
+		HashKey ^= PieceKeys[WhiteRook][int(F1)]
+
+	// white castle queen side, move A rook
 	case int(C1):
 		GameBoards[WhiteRook].PopBit(int(A1))
 		GameBoards[WhiteRook].SetBit(int(D1))
-		// black castle king side, move H rook
+		// hash rook
+		HashKey ^= PieceKeys[WhiteRook][int(A1)]
+		HashKey ^= PieceKeys[WhiteRook][int(D1)]
+
+	// black castle king side, move H rook
 	case int(G8):
 		GameBoards[BlackRook].PopBit(int(H8))
 		GameBoards[BlackRook].SetBit(int(F8))
-		// black castle queen side, move A rook
+		// hash rook
+		HashKey ^= PieceKeys[BlackRook][int(H8)]
+		HashKey ^= PieceKeys[BlackRook][int(F8)]
+
+	// black castle queen side, move A rook
 	case int(C8):
 		GameBoards[BlackRook].PopBit(int(A8))
 		GameBoards[BlackRook].SetBit(int(D8))
+		// hash rook
+		HashKey ^= PieceKeys[BlackRook][int(A8)]
+		HashKey ^= PieceKeys[BlackRook][int(D8)]
 	}
 }
 
 // update castlign rights of new board position
 func updateCastlingRights(source int, target int) {
+	// unset before castling
+	HashKey ^= CastlingKeys[Castle]
+
 	Castle &= CastlingRightsHelper[source]
 	Castle &= CastlingRightsHelper[target]
+
+	// set after castling
+	HashKey ^= CastlingKeys[Castle]
+
 }
 
 // update occupancies to reflect new board position
@@ -521,7 +591,7 @@ func PrintMoveScores(moves Moves) {
 
 // quick test function for debugging
 func TestMakeMove() {
-	var moves Moves 
+	var moves Moves
 	moves.Move_count = 0
 	GeneratePositionMoves(&moves)
 	for i := 0; i < moves.Move_count; i++ {
@@ -535,9 +605,9 @@ func TestMakeMove() {
 		SideToMove_Copy = SideToMove
 		Enpassant_Copy = Enpassant
 		Castle_Copy = Castle
-		
+
 		if MakeMove(move, allMoves) == 0 {
-			continue;
+			continue
 		}
 		PrintGameboard()
 		fmt.Print("Move #", i+1, "   ")

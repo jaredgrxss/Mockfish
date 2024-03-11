@@ -201,6 +201,8 @@ func RunUCI() {
 		ucinewgame := ucinewgame_re.MatchString(input)
 		if ucinewgame {
 			ParseUCIPosition("position startpos")
+			// clear hash table
+			ClearTranspositionTable()
 		}
 		// GO command was sent
 		ucigo_re, _ := regexp.Compile("go")
