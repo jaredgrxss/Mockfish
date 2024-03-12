@@ -42,9 +42,20 @@ func ReadHashData(alpha int, beta int, depth int) int {
 	if transpositionTableEntry.hashKey == HashKey {
 		// make sure we are at the same depth
 		if transpositionTableEntry.depth >= depth {
+			score := transpositionTableEntry.score
+
+			// mating information
+			if score < -MateScore {
+				score += Ply
+			}
+			if score > MateScore {
+				score -= Ply
+			}
+
 			// matches exact score
 			if transpositionTableEntry.flag == HashFlagExact {
-				return transpositionTableEntry.score
+				// get score from entry
+				return score
 			}
 			// matches alpha score
 			if transpositionTableEntry.flag == HashFlagAlpha &&
@@ -68,6 +79,15 @@ func ReadHashData(alpha int, beta int, depth int) int {
 func WriteHashData(score int, depth int, flag int) {
 	// get position data should be in cache
 	transpositionTableEntry := &TranspositionTable[HashKey%HASH_SIZE]
+
+	// adjust mating scores
+	if score < -MateScore {
+		score -= Ply
+	}
+	if score > MateScore {
+		score += Ply
+	}
+
 	// write to position in cache
 	transpositionTableEntry.hashKey = HashKey
 	transpositionTableEntry.score = score

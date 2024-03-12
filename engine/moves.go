@@ -15,6 +15,16 @@ type Moves struct {
 	Move_count int      // to keep track of where to insert next move
 }
 
+// game state for COPY / MAKE
+type GameState struct {
+	GameBoardsCopy [12]Bitboard 
+	GameOccupancyCopy [3]Bitboard 
+	SideToMoveCopy int 
+	EnpassantCopy int 
+	CastleCopy int
+	HashKeyCopy uint64
+}
+
 const (
 	allMoves = iota
 	onlyCaptures
@@ -331,12 +341,7 @@ func MakeMove(move int, move_flag int) int {
 	// distinguish between quiet / capture moves
 	if move_flag == allMoves {
 		// preserve the board state
-		GameBoardsCopy := GameBoards
-		GameOccupancyCopy := GameOccupancy
-		SideToMoveCopy := SideToMove
-		EnpassantCopy := Enpassant
-		CastleCopy := Castle
-		HashKeyCopy := HashKey
+		state := COPY()
 
 		// perform the move
 		GameBoards[piece].PopBit(source)
@@ -405,22 +410,12 @@ func MakeMove(move int, move_flag int) int {
 		// check to see if check was put in check from move
 		if SideToMove == White {
 			if IsSquareAttacked(GameBoards[BlackKing].LSBIndex(), SideToMove) {
-				GameBoards = GameBoardsCopy
-				GameOccupancy = GameOccupancyCopy
-				SideToMove = SideToMoveCopy
-				Enpassant = EnpassantCopy
-				Castle = CastleCopy
-				HashKey = HashKeyCopy
+				RESTORE(state)
 				return 0
 			}
 		} else {
 			if IsSquareAttacked(GameBoards[WhiteKing].LSBIndex(), SideToMove) {
-				GameBoards = GameBoardsCopy
-				GameOccupancy = GameOccupancyCopy
-				SideToMove = SideToMoveCopy
-				Enpassant = EnpassantCopy
-				Castle = CastleCopy
-				HashKey = HashKeyCopy
+				RESTORE(state)
 				return 0
 			}
 		}
@@ -587,6 +582,26 @@ func PrintMoveScores(moves Moves) {
 		PrintUCICompatibleMove(moves.Move_list[i])
 		fmt.Printf(" score: %d\n", ScoreMove(moves.Move_list[i]))
 	}
+}
+
+func COPY() GameState {
+	var state GameState 
+	state.GameBoardsCopy = GameBoards
+	state.GameOccupancyCopy = GameOccupancy
+	state.SideToMoveCopy = SideToMove
+	state.EnpassantCopy = Enpassant
+	state.CastleCopy = Castle
+	state.HashKeyCopy = HashKey
+	return state
+}
+
+func RESTORE(oldState GameState) {
+	GameBoards = oldState.GameBoardsCopy
+	GameOccupancy = oldState.GameOccupancyCopy
+	SideToMove = oldState.SideToMoveCopy
+	Enpassant = oldState.EnpassantCopy
+	Castle = oldState.CastleCopy
+	HashKey = oldState.HashKeyCopy
 }
 
 // quick test function for debugging

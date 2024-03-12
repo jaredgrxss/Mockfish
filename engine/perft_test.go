@@ -91,11 +91,7 @@ func TestPerft(t *testing.T) {
 		}
 
 		// copy board position
-		GameBoards_Copy := GameBoards
-		GameOccupancy_Copy := GameOccupancy
-		SideToMove_Copy := SideToMove
-		Enpassant_Copy := Enpassant
-		Castle_Copy := Castle
+		state := COPY()
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -107,11 +103,8 @@ func TestPerft(t *testing.T) {
 		old_nodes := nodes - cummulative_nodes
 
 		// restore
-		GameBoards = GameBoards_Copy
-		GameOccupancy = GameOccupancy_Copy
-		SideToMove = SideToMove_Copy
-		Enpassant = Enpassant_Copy
-		Castle = Castle_Copy
+		RESTORE(state)
+
 		fmt.Printf("move: %s%s%s nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, old_nodes)
 	}
 	if nodes != 4865609 {
@@ -147,11 +140,7 @@ func TestPerft2(t *testing.T) {
 		}
 
 		// copy board position
-		GameBoards_Copy := GameBoards
-		GameOccupancy_Copy := GameOccupancy
-		SideToMove_Copy := SideToMove
-		Enpassant_Copy := Enpassant
-		Castle_Copy := Castle
+		state := COPY()
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -162,11 +151,8 @@ func TestPerft2(t *testing.T) {
 
 		old_nodes := nodes - cummulative_nodes
 
-		GameBoards = GameBoards_Copy
-		GameOccupancy = GameOccupancy_Copy
-		SideToMove = SideToMove_Copy
-		Enpassant = Enpassant_Copy
-		Castle = Castle_Copy
+		// restore
+		RESTORE(state)
 
 		fmt.Printf("move: %s%s%s nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, old_nodes)
 	}
@@ -203,11 +189,7 @@ func TestPerft3(t *testing.T) {
 		}
 
 		// copy board position
-		GameBoards_Copy := GameBoards
-		GameOccupancy_Copy := GameOccupancy
-		SideToMove_Copy := SideToMove
-		Enpassant_Copy := Enpassant
-		Castle_Copy := Castle
+		state := COPY()
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -219,11 +201,7 @@ func TestPerft3(t *testing.T) {
 		old_nodes := nodes - cummulative_nodes
 
 		// restore board state
-		GameBoards = GameBoards_Copy
-		GameOccupancy = GameOccupancy_Copy
-		SideToMove = SideToMove_Copy
-		Enpassant = Enpassant_Copy
-		Castle = Castle_Copy
+		RESTORE(state)
 
 		fmt.Printf("move: %s%s%s nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, old_nodes)
 	}
@@ -260,11 +238,7 @@ func TestPerft4(t *testing.T) {
 		}
 
 		// copy board position
-		GameBoards_Copy := GameBoards
-		GameOccupancy_Copy := GameOccupancy
-		SideToMove_Copy := SideToMove
-		Enpassant_Copy := Enpassant
-		Castle_Copy := Castle
+		state := COPY()
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -276,11 +250,7 @@ func TestPerft4(t *testing.T) {
 		old_nodes := nodes - cummulative_nodes
 
 		// restore board state
-		GameBoards = GameBoards_Copy
-		GameOccupancy = GameOccupancy_Copy
-		SideToMove = SideToMove_Copy
-		Enpassant = Enpassant_Copy
-		Castle = Castle_Copy
+		RESTORE(state)
 
 		fmt.Printf("move: %s%s%s nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, old_nodes)
 	}
@@ -317,11 +287,7 @@ func TestPerft5(t *testing.T) {
 		}
 
 		// copy board position
-		GameBoards_Copy := GameBoards
-		GameOccupancy_Copy := GameOccupancy
-		SideToMove_Copy := SideToMove
-		Enpassant_Copy := Enpassant
-		Castle_Copy := Castle
+		state := COPY()
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -333,11 +299,7 @@ func TestPerft5(t *testing.T) {
 		old_nodes := nodes - cummulative_nodes
 
 		// restore board state
-		GameBoards = GameBoards_Copy
-		GameOccupancy = GameOccupancy_Copy
-		SideToMove = SideToMove_Copy
-		Enpassant = Enpassant_Copy
-		Castle = Castle_Copy
+		RESTORE(state)
 
 		fmt.Printf("move: %s%s%s nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, old_nodes)
 	}
@@ -374,11 +336,7 @@ func TestPerft6(t *testing.T) {
 		}
 
 		// copy board position
-		GameBoards_Copy := GameBoards
-		GameOccupancy_Copy := GameOccupancy
-		SideToMove_Copy := SideToMove
-		Enpassant_Copy := Enpassant
-		Castle_Copy := Castle
+		state := COPY()
 
 		if MakeMove(moves.Move_list[i], allMoves) == 0 {
 			continue
@@ -390,11 +348,7 @@ func TestPerft6(t *testing.T) {
 		old_nodes := nodes - cummulative_nodes
 
 		// restore board state
-		GameBoards = GameBoards_Copy
-		GameOccupancy = GameOccupancy_Copy
-		SideToMove = SideToMove_Copy
-		Enpassant = Enpassant_Copy
-		Castle = Castle_Copy
+		RESTORE(state)
 
 		fmt.Printf("move: %s%s%s nodes: %1d\n", IntSquareToString[source], IntSquareToString[target], promo_to_print, old_nodes)
 	}

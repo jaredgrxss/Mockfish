@@ -1,7 +1,5 @@
 package engine
 
-// import "fmt"
-
 /*********************************
 
 	EVALUATION DRIVERS AND HELPERS
@@ -128,6 +126,15 @@ var FollowPv int
 // scoring the PV line
 var ScorePv int
 
+// define highest possible value
+var Infinity int = 50000
+
+// defining mate values
+var MateValue int = 49000
+
+// define mate score
+var MateScore int = 48000
+
 func EnablePVMoveScoring(moves Moves) {
 	// disable PV following
 	FollowPv = 0
@@ -158,7 +165,9 @@ func ScoreMove(move int) int {
 
 	if capture == 1 {
 		var targetPiece = WhitePawn
+
 		var startPiece, endPiece Piece
+
 		if SideToMove == White {
 			startPiece = BlackPawn
 			endPiece = BlackKing
@@ -189,7 +198,9 @@ func SortMoves(moves *Moves) {
 	// loop
 	for i := 0; i < moves.Move_count; i++ {
 		// score
-		moveScores = append(moveScores, ScoreMove(moves.Move_list[i]))
+		score := ScoreMove(moves.Move_list[i])
+		// append
+		moveScores = append(moveScores, score)
 	}
 	// sort
 	for current := 0; current < moves.Move_count; current++ {
@@ -211,9 +222,12 @@ func SortMoves(moves *Moves) {
 func Evaluate() int {
 	// score of the position
 	score := 0
+
 	// looping variables
 	var current_piece Bitboard
 	var piece, square int
+
+	// loop
 	for i := WhitePawn; i <= BlackKing; i++ {
 		// copy
 		current_piece = GameBoards[i]
@@ -237,7 +251,6 @@ func Evaluate() int {
 				score += rookScore[square]
 			case WhiteKing:
 				score += kingScore[square]
-			// for black pieces mirror indices with square conversion
 			case BlackPawn:
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]

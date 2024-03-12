@@ -2,9 +2,10 @@ package main
 
 import (
 	"Mockfish/engine"
+	"fmt"
 )
 
-var debug int = 0
+var debug int = 1
 
 func main() {
 	/******************
@@ -16,18 +17,21 @@ func main() {
 	engine.ClearTranspositionTable()
 	// precompute hash keys
 	engine.InitZobrist()
+	fmt.Println()
 	/**********************
 		END OF REQUIRED
 	**********************/
 
 	// // SEARCH TEST
-	// engine.ParseFen(engine.START_POSITION)
-	// engine.PrintGameboard()
-	// engine.SearchPosition(10)
-	// // NODES BEOFRE TRANSPOSITION TABLE
-	// // 3407991
-	// // NODES AFTER TRANSPOSITION TABLE
-	// //
+	engine.ParseFen(engine.START_POSITION)
+	engine.PrintGameboard()
+	engine.SearchPosition(10)
+	// // // NODES BEOFRE TRANSPOSITION TABLE
+	// // // 3407991
+	// // // NODES AFTER TRANSPOSITION TABLE
+	// // //
+	// fmt.Println("HERE")
+	// TESTING_ZOBRIST(4)
 
 	if debug != 1 {
 		engine.RunUCI()
