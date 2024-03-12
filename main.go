@@ -17,21 +17,19 @@ func main() {
 	engine.ClearTranspositionTable()
 	// precompute hash keys
 	engine.InitZobrist()
+	// improving evaulation masks
+	engine.InitEvaluationMasks()
 	fmt.Println()
 	/**********************
 		END OF REQUIRED
 	**********************/
 
 	// // SEARCH TEST
-	engine.ParseFen(engine.START_POSITION)
+	// engine.ParseFen(engine.START_POSITION)
+	engine.ParseFen("8/8/3P4/8/8/5p2/8 w - -")
 	engine.PrintGameboard()
-	engine.SearchPosition(10)
-	// // // NODES BEOFRE TRANSPOSITION TABLE
-	// // // 3407991
-	// // // NODES AFTER TRANSPOSITION TABLE
-	// // //
-	// fmt.Println("HERE")
-	// TESTING_ZOBRIST(4)
+	fmt.Println("score", engine.Evaluate())
+	// engine.SearchPosition(9)
 
 	if debug != 1 {
 		engine.RunUCI()

@@ -18,7 +18,6 @@ var NegamaxNodes = 0
 const FULL_DEPTH_MOVES int = 4
 const REDUCTION_LIMIT int = 3
 
-
 func Negamax(alpha int, beta int, depth int) int {
 	// node score
 	var score int
@@ -26,10 +25,20 @@ func Negamax(alpha int, beta int, depth int) int {
 	// define hash flag for TT
 	hashFlag := HashFlagAlpha
 
+	// check for repetition
+	if Ply > 0 && IsRepetition() {
+		// return draw
+		return 0
+	}
+
+	// figure out if this is a pv node
+	pvNode := beta-alpha > 1
+
 	// read cache
 	if Ply > 0 &&
 		score == ReadHashData(alpha, beta, depth) &&
-		ReadHashData(alpha, beta, depth) != NO_HASH_ENTRY {
+		ReadHashData(alpha, beta, depth) != NO_HASH_ENTRY &&
+		!pvNode {
 		// if we have seen this move, return score without searching
 		return score
 	}
@@ -71,6 +80,10 @@ func Negamax(alpha int, beta int, depth int) int {
 		// increment our ply
 		Ply++
 
+		// increment repetition index & store hash key
+		RepetitionIndex++
+		RepetitionTable[RepetitionIndex] = HashKey
+
 		// hash enpassant
 		if Enpassant != 64 {
 			HashKey ^= EnpassantKeys[Enpassant]
@@ -87,6 +100,10 @@ func Negamax(alpha int, beta int, depth int) int {
 		score := -Negamax(-beta, -beta+1, depth-3)
 
 		Ply--
+
+		// decrement repetition index
+		RepetitionIndex--
+
 		RESTORE(state)
 		if score >= beta {
 			// fails high
@@ -117,9 +134,15 @@ func Negamax(alpha int, beta int, depth int) int {
 		state := COPY()
 		Ply++
 
+		// increment repetition index & store hash key
+		RepetitionIndex++
+		RepetitionTable[RepetitionIndex] = HashKey
+
 		// check to see if move was legal
 		if MakeMove(moves.Move_list[i], 0) == 0 {
 			Ply--
+			// decrement repetition index
+			RepetitionIndex--
 			continue
 		}
 
@@ -132,7 +155,10 @@ func Negamax(alpha int, beta int, depth int) int {
 			score = -Negamax(-beta, -alpha, depth-1)
 		} else {
 			// condition to use LMR
-			if movesSearched >= FULL_DEPTH_MOVES && depth >= REDUCTION_LIMIT && !inCheck && capture == 0 && promo == 0 {
+			if movesSearched >= FULL_DEPTH_MOVES &&
+				depth >= REDUCTION_LIMIT &&
+				!inCheck &&
+				capture == 0 && promo == 0 {
 				score = -Negamax(-alpha-1, -alpha, depth-2) // search w/ reduced depth
 			} else {
 				score = alpha + 1 // make sure full detph search is done
@@ -151,6 +177,8 @@ func Negamax(alpha int, beta int, depth int) int {
 		// restore board
 		RESTORE(state)
 		Ply--
+		// decrement repetition index
+		RepetitionIndex--
 
 		// increment number of moves searched
 		movesSearched++
@@ -167,7 +195,6 @@ func Negamax(alpha int, beta int, depth int) int {
 
 			// PV node
 			alpha = score
-
 
 			// write PV move to PV table
 			PVTable[Ply][Ply] = moves.Move_list[i]
@@ -217,7 +244,6 @@ func Negamax(alpha int, beta int, depth int) int {
 // quiescence search for horizon effect
 func Quiescence(alpha int, beta int) int {
 
-
 	NegamaxNodes++
 
 	if Ply > MAX_PLY-1 {
@@ -249,9 +275,15 @@ func Quiescence(alpha int, beta int) int {
 		state := COPY()
 		Ply++
 
+		// increment repetition index & store hash key
+		RepetitionIndex++
+		RepetitionTable[RepetitionIndex] = HashKey
+
 		// check to see if move was legal
 		if MakeMove(q_moves.Move_list[i], onlyCaptures) == 0 {
 			Ply--
+			// decrement repetition index
+			RepetitionIndex--
 			continue
 		}
 
@@ -262,10 +294,12 @@ func Quiescence(alpha int, beta int) int {
 		RESTORE(state)
 		Ply--
 
+		// decrement repetition index
+		RepetitionIndex--
+
 		if score > alpha {
 			// PV node
 			alpha = score
-
 
 			if score >= beta {
 				// move fails high
@@ -306,7 +340,13 @@ func SearchPosition(depth int) {
 		/***************
 			LOGGING
 		***************/
-		fmt.Printf("ITERATIVE DEEPENING: eval: %d depth: %d nodes: %d time: %dms pv ", score, search_depth, NegamaxNodes, GetTime() - startTime)
+		if score > -MateValue && score < -MateScore {
+			fmt.Printf("info score mate %d depth %d nodes %d time %d pv ", -(score+MateValue)/2-1, search_depth, NegamaxNodes, GetTime()-startTime)
+		} else if score > MateScore && score < MateValue {
+			fmt.Printf("info score mate %d depth %d nodes %d time %d pv ", (MateValue-score)/2+1, search_depth, NegamaxNodes, GetTime()-startTime)
+		} else {
+			fmt.Printf("cp: %d depth: %d nodes: %d time: %dms pv ", score, search_depth, NegamaxNodes, GetTime()-startTime)
+		}
 		for cnt := 0; cnt < PVLength[0]; cnt++ {
 			// print move
 			PrintUCICompatibleMove(PVTable[0][cnt])
@@ -325,7 +365,6 @@ func SearchPosition(depth int) {
 	PrintUCICompatibleMove(PVTable[0][0])
 	fmt.Println()
 }
-
 
 func GetTime() int64 {
 	return time.Now().UnixNano() / 1e6

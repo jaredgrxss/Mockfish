@@ -105,6 +105,43 @@ var MVV_LVA = [12][12]int{
 	{100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600},
 }
 
+// get the rank from the square
+var GetRank = [64]int{
+	7, 7, 7, 7, 7, 7, 7, 7,
+	6, 6, 6, 6, 6, 6, 6, 6,
+	5, 5, 5, 5, 5, 5, 5, 5,
+	4, 4, 4, 4, 4, 4, 4, 4,
+	3, 3, 3, 3, 3, 3, 3, 3,
+	2, 2, 2, 2, 2, 2, 2, 2,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	0, 0, 0, 0, 0, 0, 0, 0,
+}
+
+// penalty for doubling pawns
+var DoublePawnPenalty = -10
+
+// penalty for making pawns isolated
+var IsolatedPawnPenalty = -10
+
+// passed pawns are really good
+var PassedPawnBonus = [8]int{
+	0, 10, 30, 50, 75, 100, 150, 200,
+}
+
+// file masking
+var FileMasks [64]Bitboard
+
+// rank masking
+var RankMasks [64]Bitboard
+
+// isolated mask
+var IsolatedMasks [64]Bitboard
+
+// passed pawn mask
+var WhitePassedMasks [64]Bitboard
+
+var BlackPassedMasks [64]Bitboard
+
 // constants
 const MAX_PLY = 64
 
@@ -243,6 +280,20 @@ func Evaluate() int {
 			switch i {
 			case WhitePawn:
 				score += pawnScore[square]
+				// get double pawn penalty
+				doublePawns := GameBoards[i] & FileMasks[square]
+				if doublePawns.CountBits() > 1 {
+					score += doublePawns.CountBits() * DoublePawnPenalty
+				}
+				// get isolated pawn penalty
+				if GameBoards[i] & IsolatedMasks[square] == 0 {
+					score += IsolatedPawnPenalty
+				}
+
+				// white passed pawn bonus 
+				if WhitePassedMasks[square] & GameBoards[BlackPawn] == 0 {
+					score += PassedPawnBonus[GetRank[square]]
+				}
 			case WhiteKnight:
 				score += knightScore[square]
 			case WhiteBishop:
@@ -255,6 +306,20 @@ func Evaluate() int {
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
 				score -= pawnScore[mirrorScore[index_sq]]
+				// get double pawn penalty
+				doublePawns := GameBoards[i] & FileMasks[square]
+				if doublePawns.CountBits() > 1 {
+					score -= doublePawns.CountBits() * DoublePawnPenalty
+				}
+				// get isolated pawn penalty
+				if GameBoards[i] & IsolatedMasks[square] == 0 {
+					score -= IsolatedPawnPenalty
+				}
+				// give passed pawn bonus 
+				// white passed pawn bonus 
+				if BlackPassedMasks[square] & GameBoards[WhitePawn] == 0 {
+					score -= PassedPawnBonus[GetRank[square]]
+				}
 			case BlackKnight:
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
@@ -278,5 +343,94 @@ func Evaluate() int {
 		return score
 	} else {
 		return -score
+	}
+}
+
+// check for repetition on board
+func IsRepetition() bool {
+	for i := 0; i < RepetitionIndex; i++ {
+		// if we found the hash, it is a repetition
+		if RepetitionTable[i] == HashKey {
+			return true
+		}
+	}
+	// by default it is not a repetition
+	return false
+}
+
+// set file or rank mask
+func SetFileRankMask(fileNumber int, rankNumber int) Bitboard {
+	// file or rank
+	var mask Bitboard
+
+	// loop over ranks and files
+	for rank := 0; rank < 8; rank++ {
+		for file := 0; file < 8; file++ {
+			sq := rank*8 + file
+			if fileNumber != -1 && file == fileNumber {
+				mask.SetBit(sq)
+			} else if rankNumber != -1 && rank == rankNumber {
+				mask.SetBit(sq)
+			}
+		}
+	}
+
+	return mask
+}
+
+// set eval masks
+func InitEvaluationMasks() {
+
+	// INIT FILE MASKS
+	for rank := 0; rank < 8; rank++ {
+		for file := 0; file < 8; file++ {
+			sq := rank*8 + file
+			FileMasks[sq] |= SetFileRankMask(file, -1)
+
+		}
+	}
+	// INIT RANK MASKS
+	for rank := 0; rank < 8; rank++ {
+		for file := 0; file < 8; file++ {
+			sq := rank*8 + file
+			RankMasks[sq] |= SetFileRankMask(-1, rank)
+		}
+	}
+
+	// INIT ISOLATED MASKS
+	for rank := 0; rank < 8; rank++ {
+		for file := 0; file < 8; file++ {
+			sq := rank*8 + file
+			IsolatedMasks[sq] |= SetFileRankMask(file-1, -1)
+			IsolatedMasks[sq] |= SetFileRankMask(file+1, -1)
+		}
+	}
+
+	// White Passed Masks
+	for rank := 0; rank < 8; rank++ {
+		for file := 0; file < 8; file++ {
+			sq := rank*8 + file
+			WhitePassedMasks[sq] |= SetFileRankMask(file-1, -1)
+			WhitePassedMasks[sq] |= SetFileRankMask(file, -1)
+			WhitePassedMasks[sq] |= SetFileRankMask(file+1, -1)
+
+			for i := 0; i < (7 - rank); i++ {
+				WhitePassedMasks[sq] &= ^RankMasks[(7-i)*8+file]
+			}
+		}
+	}
+
+	// White Black Masks
+	for rank := 0; rank < 8; rank++ {
+		for file := 0; file < 8; file++ {
+			sq := rank*8 + file
+			BlackPassedMasks[sq] |= SetFileRankMask(file-1, -1)
+			BlackPassedMasks[sq] |= SetFileRankMask(file, -1)
+			BlackPassedMasks[sq] |= SetFileRankMask(file+1, -1)
+
+			for i := 0; i < rank+1; i++ {
+				BlackPassedMasks[sq] &= ^RankMasks[i*8+file]
+			}
+		}
 	}
 }

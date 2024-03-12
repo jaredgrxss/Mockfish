@@ -125,6 +125,11 @@ func ParseUCIPosition(command string) {
 			if move == 0 {
 				break
 			}
+
+			// increment repetition index
+			RepetitionIndex++
+			RepetitionTable[RepetitionIndex] = HashKey
+
 			MakeMove(move, allMoves)
 
 		}
@@ -161,9 +166,9 @@ func ParseUCIGo(command string) {
 func PrintUCICompatibleMove(move int) {
 	source, target, _, promo, _, _, _, _ := DecodeMove(move)
 	var promo_to_print = ""
-		if promo != 0 {
-			promo_to_print = string(PromotedPieces[promo])
-		}
+	if promo != 0 {
+		promo_to_print = string(PromotedPieces[promo])
+	}
 	fmt.Printf("%s%s%s", IntSquareToString[source], IntSquareToString[target], promo_to_print)
 }
 
@@ -195,13 +200,13 @@ func RunUCI() {
 		position := uci_position_re.MatchString(input)
 		if position {
 			ParseUCIPosition(input)
+			ClearTranspositionTable()
 		}
 		// new game
 		ucinewgame_re, _ := regexp.Compile("ucinewgame")
 		ucinewgame := ucinewgame_re.MatchString(input)
 		if ucinewgame {
 			ParseUCIPosition("position startpos")
-			// clear hash table
 			ClearTranspositionTable()
 		}
 		// GO command was sent
