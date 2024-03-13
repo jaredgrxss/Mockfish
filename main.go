@@ -26,10 +26,12 @@ func main() {
 
 	// // SEARCH TEST
 	// engine.ParseFen(engine.START_POSITION)
-	engine.ParseFen("8/8/3P4/8/8/5p2/8 w - -")
+	testPos := "2k5/8/8/8/K7/1R6/8 w - -"
+	engine.ParseFen(testPos)
+	fmt.Println(engine.Evaluate())
+	// engine.ParseFen(engine.KILLER_POSITION)
 	engine.PrintGameboard()
-	fmt.Println("score", engine.Evaluate())
-	// engine.SearchPosition(9)
+	// engine.SearchPosition(17)
 
 	if debug != 1 {
 		engine.RunUCI()

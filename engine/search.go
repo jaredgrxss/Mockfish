@@ -14,6 +14,7 @@ import (
 */
 var Ply int = 0
 var NegamaxNodes = 0
+var movesInQuiesence = 0
 
 const FULL_DEPTH_MOVES int = 4
 const REDUCTION_LIMIT int = 3
@@ -105,6 +106,7 @@ func Negamax(alpha int, beta int, depth int) int {
 		RepetitionIndex--
 
 		RESTORE(state)
+
 		if score >= beta {
 			// fails high
 			return beta
@@ -148,7 +150,6 @@ func Negamax(alpha int, beta int, depth int) int {
 
 		// increase legal move counter
 		legalMoves++
-
 		// LMR
 		if movesSearched == 0 {
 			// do a full normal search for non PV nodes
@@ -167,7 +168,7 @@ func Negamax(alpha int, beta int, depth int) int {
 			if score > alpha {
 				score = -Negamax(-alpha-1, -alpha, depth-1) // make aspiration window smaller
 
-				// if LMK fails, re-search at fll depth with normal aspiration bandwidth
+				// if LMK fails, re-search at full depth with normal aspiration bandwidth
 				if (score > alpha) && (score < beta) {
 					score = -Negamax(-beta, -alpha, depth-1)
 				}
@@ -286,7 +287,7 @@ func Quiescence(alpha int, beta int) int {
 			RepetitionIndex--
 			continue
 		}
-
+		movesInQuiesence++
 		// current score
 		score := -Quiescence(-beta, -alpha)
 
@@ -345,7 +346,7 @@ func SearchPosition(depth int) {
 		} else if score > MateScore && score < MateValue {
 			fmt.Printf("info score mate %d depth %d nodes %d time %d pv ", (MateValue-score)/2+1, search_depth, NegamaxNodes, GetTime()-startTime)
 		} else {
-			fmt.Printf("cp: %d depth: %d nodes: %d time: %dms pv ", score, search_depth, NegamaxNodes, GetTime()-startTime)
+			fmt.Printf("cp: %d depth: %d nodes: %d moves in qsearch %d time: %dms pv ", score, search_depth, NegamaxNodes, movesInQuiesence, GetTime()-startTime)
 		}
 		for cnt := 0; cnt < PVLength[0]; cnt++ {
 			// print move

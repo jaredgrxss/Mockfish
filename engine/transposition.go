@@ -11,7 +11,7 @@ const (
 const NO_HASH_ENTRY = 100000
 
 // hash table size (10 MB)
-const HASH_SIZE = 0x1000000
+const HASH_SIZE = 0x800000
 
 // data structure for transposition table
 type TT struct {

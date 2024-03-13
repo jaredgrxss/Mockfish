@@ -48,7 +48,7 @@ var knightScore = [64]int{
 var bishopScore = [64]int{
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 10, 10, 0, 0, 0,
+	0, 20, 0, 10, 10, 20, 0, 0,
 	0, 0, 10, 20, 20, 10, 0, 0,
 	0, 0, 10, 20, 20, 10, 0, 0,
 	0, 10, 0, 0, 0, 0, 10, 0,
@@ -127,6 +127,12 @@ var IsolatedPawnPenalty = -10
 var PassedPawnBonus = [8]int{
 	0, 10, 30, 50, 75, 100, 150, 200,
 }
+
+// open files are good
+var SemiOpenFileScore = 10
+
+// open files are good
+var OpenFileScore = 15
 
 // file masking
 var FileMasks [64]Bitboard
@@ -286,12 +292,12 @@ func Evaluate() int {
 					score += doublePawns.CountBits() * DoublePawnPenalty
 				}
 				// get isolated pawn penalty
-				if GameBoards[i] & IsolatedMasks[square] == 0 {
+				if GameBoards[i]&IsolatedMasks[square] == 0 {
 					score += IsolatedPawnPenalty
 				}
 
-				// white passed pawn bonus 
-				if WhitePassedMasks[square] & GameBoards[BlackPawn] == 0 {
+				// white passed pawn bonus
+				if WhitePassedMasks[square]&GameBoards[BlackPawn] == 0 {
 					score += PassedPawnBonus[GetRank[square]]
 				}
 			case WhiteKnight:
@@ -300,8 +306,32 @@ func Evaluate() int {
 				score += bishopScore[square]
 			case WhiteRook:
 				score += rookScore[square]
+
+				// semi open files for rook
+				if GameBoards[WhitePawn]&FileMasks[square] == 0 {
+					score += SemiOpenFileScore
+				}
+
+				// open files for rook
+				// semi open files for rook
+				if (GameBoards[WhitePawn] |  GameBoards[BlackPawn])&FileMasks[square] == 0 {
+					score += OpenFileScore
+				}
+
 			case WhiteKing:
 				score += kingScore[square]
+
+				// semi open files for king are bad
+				if GameBoards[WhitePawn]&FileMasks[square] == 0 {
+					score -= SemiOpenFileScore
+				}
+
+				// open files for king are bad
+				if (GameBoards[WhitePawn] | GameBoards[BlackPawn])&FileMasks[square] == 0 {
+					score -= OpenFileScore
+				}
+
+
 			case BlackPawn:
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
@@ -312,12 +342,12 @@ func Evaluate() int {
 					score -= doublePawns.CountBits() * DoublePawnPenalty
 				}
 				// get isolated pawn penalty
-				if GameBoards[i] & IsolatedMasks[square] == 0 {
+				if GameBoards[i]&IsolatedMasks[square] == 0 {
 					score -= IsolatedPawnPenalty
 				}
-				// give passed pawn bonus 
-				// white passed pawn bonus 
-				if BlackPassedMasks[square] & GameBoards[WhitePawn] == 0 {
+				// give passed pawn bonus
+				// white passed pawn bonus
+				if BlackPassedMasks[square]&GameBoards[WhitePawn] == 0 {
 					score -= PassedPawnBonus[GetRank[square]]
 				}
 			case BlackKnight:
@@ -332,10 +362,30 @@ func Evaluate() int {
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
 				score -= rookScore[mirrorScore[index_sq]]
+
+				// semi open files for rook
+				if GameBoards[BlackPawn]&FileMasks[square] == 0 {
+					score -= SemiOpenFileScore
+				}
+
+				// open files for rook
+				if (GameBoards[WhitePawn] | GameBoards[BlackPawn])&FileMasks[square] == 0 {
+					score -= OpenFileScore
+				}
 			case BlackKing:
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
 				score -= kingScore[mirrorScore[index_sq]]
+
+				// semi open files for king are bad
+				if GameBoards[BlackPawn]&FileMasks[square] == 0 {
+					score += SemiOpenFileScore
+				}
+
+				// open files for king are bad
+				if (GameBoards[WhitePawn] |  GameBoards[BlackPawn])&FileMasks[square] == 0 {
+					score += OpenFileScore
+				}
 			}
 		}
 	}
