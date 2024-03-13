@@ -118,15 +118,18 @@ var GetRank = [64]int{
 }
 
 // penalty for doubling pawns
-var DoublePawnPenalty = -10
+var DoublePawnPenalty int = -10
 
 // penalty for making pawns isolated
-var IsolatedPawnPenalty = -10
+var IsolatedPawnPenalty int = -10
 
 // passed pawns are really good
 var PassedPawnBonus = [8]int{
 	0, 10, 30, 50, 75, 100, 150, 200,
 }
+
+// king shield
+var KingShieldBonus int = 5
 
 // open files are good
 var SemiOpenFileScore = 10
@@ -304,6 +307,10 @@ func Evaluate() int {
 				score += knightScore[square]
 			case WhiteBishop:
 				score += bishopScore[square]
+
+				// mobility
+				score += GetBishopAttack(square, GameOccupancy[Both]).CountBits()
+
 			case WhiteRook:
 				score += rookScore[square]
 
@@ -314,9 +321,12 @@ func Evaluate() int {
 
 				// open files for rook
 				// semi open files for rook
-				if (GameBoards[WhitePawn] |  GameBoards[BlackPawn])&FileMasks[square] == 0 {
+				if (GameBoards[WhitePawn]|GameBoards[BlackPawn])&FileMasks[square] == 0 {
 					score += OpenFileScore
 				}
+			case WhiteQueen:
+				// mobility
+				score += GetQueenAttack(square, GameOccupancy[Both]).CountBits()
 
 			case WhiteKing:
 				score += kingScore[square]
@@ -327,10 +337,12 @@ func Evaluate() int {
 				}
 
 				// open files for king are bad
-				if (GameBoards[WhitePawn] | GameBoards[BlackPawn])&FileMasks[square] == 0 {
+				if (GameBoards[WhitePawn]|GameBoards[BlackPawn])&FileMasks[square] == 0 {
 					score -= OpenFileScore
 				}
 
+				// king safety is important
+				score += (KingAttacks[square] & GameOccupancy[White]).CountBits() * KingShieldBonus
 
 			case BlackPawn:
 				string_sq := IntSquareToString[square]
@@ -358,6 +370,9 @@ func Evaluate() int {
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
 				score -= bishopScore[mirrorScore[index_sq]]
+
+				// mobility
+				score -= GetBishopAttack(square, GameOccupancy[Both]).CountBits()
 			case BlackRook:
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
@@ -369,9 +384,12 @@ func Evaluate() int {
 				}
 
 				// open files for rook
-				if (GameBoards[WhitePawn] | GameBoards[BlackPawn])&FileMasks[square] == 0 {
+				if (GameBoards[WhitePawn]|GameBoards[BlackPawn])&FileMasks[square] == 0 {
 					score -= OpenFileScore
 				}
+			case BlackQueen:
+				// mobility
+				score -= GetQueenAttack(square, GameOccupancy[Both]).CountBits()
 			case BlackKing:
 				string_sq := IntSquareToString[square]
 				index_sq := StringSquareToBit[string_sq]
@@ -383,9 +401,12 @@ func Evaluate() int {
 				}
 
 				// open files for king are bad
-				if (GameBoards[WhitePawn] |  GameBoards[BlackPawn])&FileMasks[square] == 0 {
+				if (GameBoards[WhitePawn]|GameBoards[BlackPawn])&FileMasks[square] == 0 {
 					score += OpenFileScore
 				}
+
+				// king safety is important
+				score -= (KingAttacks[square] & GameOccupancy[White]).CountBits() * KingShieldBonus
 			}
 		}
 	}
