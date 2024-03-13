@@ -15,13 +15,14 @@ import (
 var Ply int = 0
 var NegamaxNodes = 0
 var movesInQuiesence = 0
+var transposition int = 0
 
 const FULL_DEPTH_MOVES int = 4
 const REDUCTION_LIMIT int = 3
 
 func Negamax(alpha int, beta int, depth int) int {
 	// node score
-	var score int
+	score := ReadHashData(alpha, beta, depth)
 
 	// define hash flag for TT
 	hashFlag := HashFlagAlpha
@@ -35,11 +36,11 @@ func Negamax(alpha int, beta int, depth int) int {
 	// figure out if this is a pv node
 	pvNode := beta-alpha > 1
 
-	// read cache
+	// return cached score
 	if Ply > 0 &&
-		score == ReadHashData(alpha, beta, depth) &&
-		ReadHashData(alpha, beta, depth) != NO_HASH_ENTRY &&
+		score != NO_HASH_ENTRY &&
 		!pvNode {
+		transposition++
 		// if we have seen this move, return score without searching
 		return score
 	}
@@ -343,8 +344,8 @@ func SearchPosition(depth int) {
 			beta = Infinity
 			continue
 		}
-		alpha = score - 20
-		beta = score + 20
+		alpha = score - 50
+		beta = score + 50
 
 		/***************
 			LOGGING
@@ -354,7 +355,7 @@ func SearchPosition(depth int) {
 		} else if score > MateScore && score < MateValue {
 			fmt.Printf("info score mate %d depth %d nodes %d time %d pv ", (MateValue-score)/2+1, search_depth, NegamaxNodes, GetTime()-startTime)
 		} else {
-			fmt.Printf("cp: %d depth: %d nodes: %d moves in qsearch %d time: %dms pv ", score, search_depth, NegamaxNodes, movesInQuiesence, GetTime()-startTime)
+			fmt.Printf("cp: %d depth: %d nodes: %d moves in qsearch: %d cache hits: %d time: %dms pv ", score, search_depth, NegamaxNodes, movesInQuiesence, transposition, GetTime()-startTime)
 		}
 		for cnt := 0; cnt < PVLength[0]; cnt++ {
 			// print move

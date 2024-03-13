@@ -1,5 +1,7 @@
 package engine
 
+// import "fmt"
+
 // CONSTANTS for transposition table
 const (
 	HashFlagExact int = iota
@@ -11,7 +13,7 @@ const (
 const NO_HASH_ENTRY = 100000
 
 // hash table size (10 MB)
-const HASH_SIZE = 0x800000
+const HASH_SIZE = 0x1000000
 
 // data structure for transposition table
 type TT struct {
@@ -37,7 +39,8 @@ func ClearTranspositionTable() {
 // read our cache for the position
 func ReadHashData(alpha int, beta int, depth int) int {
 	// get instance of hash entry in transposition table
-	transpositionTableEntry := &TranspositionTable[HashKey%HASH_SIZE]
+	transpositionTableEntry := TranspositionTable[HashKey%HASH_SIZE]
+
 	// make sure unique hash matches the entry
 	if transpositionTableEntry.hashKey == HashKey {
 		// make sure we are at the same depth

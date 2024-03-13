@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var debug int = 0
+var debug int = 1
 
 func main() {
 	/******************
@@ -25,11 +25,11 @@ func main() {
 	**********************/
 
 	// // SEARCH TEST
-	// testPos := "2k5/8/8/8/K7/1Q6/8 w - -"
-	// engine.ParseFen(testPos)
-	// // engine.ParseFen(engine.START_POSITION)
-	// engine.PrintGameboard()
-	// engine.SearchPosition(10)
+	testPos := "1k6/8/8/6Q1/1K6/8/8/8 b - -"
+	engine.ParseFen(testPos)
+	// engine.ParseFen(engine.KILLER_POSITION)
+	engine.PrintGameboard()
+	engine.SearchPosition(15)
 
 	if debug != 1 {
 		engine.RunUCI()
