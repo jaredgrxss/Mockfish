@@ -338,6 +338,14 @@ func SearchPosition(depth int) {
 		// find best move
 		score := Negamax(alpha, beta, search_depth)
 
+		if score <= alpha || score >= beta {
+			alpha = -Infinity
+			beta = Infinity
+			continue
+		}
+		alpha = score - 20
+		beta = score + 20
+
 		/***************
 			LOGGING
 		***************/

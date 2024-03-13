@@ -25,9 +25,9 @@ func main() {
 	**********************/
 
 	// // SEARCH TEST
-	// engine.ParseFen(engine.START_POSITION)
 	// testPos := "2k5/8/8/8/K7/1Q6/8 w - -"
 	// engine.ParseFen(testPos)
+	// // engine.ParseFen(engine.START_POSITION)
 	// engine.PrintGameboard()
 	// engine.SearchPosition(10)
 
