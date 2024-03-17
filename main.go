@@ -2,10 +2,10 @@ package main
 
 import (
 	"Mockfish/engine"
-	"fmt"
+	// "fmt"
 )
 
-var debug int = 1
+var debug int = 0
 
 func main() {
 	/******************
@@ -19,17 +19,16 @@ func main() {
 	engine.InitZobrist()
 	// improving evaulation masks
 	engine.InitEvaluationMasks()
-	fmt.Println()
 	/**********************
 		END OF REQUIRED
 	**********************/
 
 	// // SEARCH TEST
-	testPos := "1k6/8/8/6Q1/1K6/8/8/8 b - -"
-	engine.ParseFen(testPos)
-	// engine.ParseFen(engine.KILLER_POSITION)
-	engine.PrintGameboard()
-	engine.SearchPosition(15)
+	// testPos := "1k6/8/8/6Q1/1K6/8/8/8 b - -"
+	// engine.ParseFen(engine.START_POSITION)
+	// engine.PrintGameboard()
+	// fmt.Println(engine.Evaluate())
+	// engine.SearchPosition(10)
 
 	if debug != 1 {
 		engine.RunUCI()

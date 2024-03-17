@@ -344,8 +344,8 @@ func SearchPosition(depth int) {
 			beta = Infinity
 			continue
 		}
-		alpha = score - 50
-		beta = score + 50
+		alpha = score - 100
+		beta = score + 100
 
 		/***************
 			LOGGING
