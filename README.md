@@ -27,7 +27,7 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 - [Static Piece Material Score](https://www.dailychess.com/rival/programming/evaluation.php)
     - This is the technique of assigning each piece. In practice this is quite bad, as when you load up the engine to play, it will simply move pieces around quite unintelligently. There's really little to give it 
-        - ***Elo (100) / Elo Gain (+100) ***
+        - ***Elo (100) / Elo Gain (+100)***
 
 - [Static Positional Score](https://www.dailychess.com/rival/programming/evaluation.php)
     - This assigns a certain weight to every position for every different piece type (for instance, kings typically do better towards the edge of the board). This improved performance, but not by much...
@@ -48,7 +48,7 @@ C++ was considered, but in order to take advantage of such optimizations, I woul
 
 - [Principle Variation Search](https://www.chessprogramming.org/Principal_Variation_Search)
     - When implementing principle variation search, you are allowing the engine to search it allows for a more efficient alpha-beta search to occur as the PV-node is the only one search in the full window
-        - ***Elo (~1550) / Elo Gain (250) ***
+        - ***Elo (~1550) / Elo Gain (250)***
 
 - [Iterative Deepening](https://www.educative.io/answers/what-is-iterative-deepening-search)
     - With iterative deepening we can use the results of our previous search at a depth n - 1 to make enhanced decisions about the n-th layer (with principle variation search for instance), this allows also for time controls, although i didn't implement them...
